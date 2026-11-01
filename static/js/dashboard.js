@@ -1349,57 +1349,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initialize interactive cyber background
     initInteractiveBackground();
 
-    // ── 1. Spatial 3D Tilt Animations ──
-    function initSpatialTilt() {
-        const tiltElements = document.querySelectorAll('.welcome-card, .bg-step-card, .telemetry-session-card, .blocked-card');
-        tiltElements.forEach(el => {
-            el.addEventListener('mousemove', e => {
-                const rect = el.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-                const rotateX = ((y - centerY) / centerY) * -5;
-                const rotateY = ((x - centerX) / centerX) * 5;
-                
-                el.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
-                el.style.transition = 'none';
-            });
-            
-            el.addEventListener('mouseleave', () => {
-                el.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
-                el.style.transition = 'transform 0.4s ease';
-            });
-        });
-    }
-    
-    // Call tilt init on newly added DOM elements (like chat bubbles) using MutationObserver
-    const observer = new MutationObserver(mutations => {
-        mutations.forEach(m => {
-            m.addedNodes.forEach(node => {
-                if (node.nodeType === 1 && node.classList.contains('message-row')) {
-                    const bubble = node.querySelector('.message-bubble');
-                    if (bubble) {
-                        bubble.addEventListener('mousemove', e => {
-                            const rect = bubble.getBoundingClientRect();
-                            const x = e.clientX - rect.left;
-                            const y = e.clientY - rect.top;
-                            const rotateX = ((y - rect.height/2) / (rect.height/2)) * -3;
-                            const rotateY = ((x - rect.width/2) / (rect.width/2)) * 3;
-                            bubble.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.01, 1.01, 1.01)`;
-                            bubble.style.transition = 'none';
-                        });
-                        bubble.addEventListener('mouseleave', () => {
-                            bubble.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
-                            bubble.style.transition = 'transform 0.4s ease';
-                        });
-                    }
-                }
-            });
-        });
-    });
-    observer.observe(document.getElementById('chat-messages'), { childList: true });
-    initSpatialTilt();
 
     // ── 2. Threat Ripple Animation ──
     window.triggerThreatRipple = function() {
