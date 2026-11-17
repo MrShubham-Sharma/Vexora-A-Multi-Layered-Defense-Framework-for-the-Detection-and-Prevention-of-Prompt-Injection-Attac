@@ -1,66 +1,218 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="legal-html">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terms of Service - Vexora</title>
-    <meta name="description" content="Vexora terms of service. Review the terms governing your use of the Vexora prompt injection defense framework.">
-    <link rel="icon" type="image/jpeg" href="/static/favicon.jpg">
+    <title>Terms of Service — Vexora AI</title>
+    <meta name="description" content="Vexora AI Terms of Service. Review permitted use, open-source licensing, and liability terms for the Vexora prompt injection defense framework.">
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='favicon.jpg') }}">
+    <link rel="shortcut icon" type="image/jpeg" href="/static/favicon.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
-<div class="legal-layout">
-    <a href="/" class="legal-back">&#8592; Back to Vexora</a>
+<body class="legal-page">
 
-    <h1>Terms of Service</h1>
-    <p class="legal-meta">Effective date: October 2026 &middot; Vexora</p>
+    <!-- Top Sticky Navigation -->
+    <header class="legal-navbar">
+        <a href="/" class="legal-nav-brand" title="Return to Vexora AI Gateway">
+            <div class="legal-brand-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="legal-brand-text">
+                <div class="legal-brand-title">Vexora <span>AI</span></div>
+                <div class="legal-brand-sub">AI Security Gateway</div>
+            </div>
+        </a>
 
-    <h2>1. Acceptance</h2>
-    <p>By installing or using Vexora, you agree to these terms. If you do not agree, do not use the software.</p>
+        <div class="legal-nav-actions">
+            <a href="/" class="legal-back-btn">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Return to Gateway</span>
+            </a>
+        </div>
+    </header>
 
-    <h2>2. Description of Service</h2>
-    <p>Vexora is an open-source, multi-layered defense framework for the detection and prevention of prompt injection attacks in Large Language Models. It screens prompts through three layers before forwarding them to third-party AI model APIs of your choice.</p>
+    <!-- Main Content Layout -->
+    <main class="legal-wrapper">
 
-    <h2>3. Permitted Use</h2>
-    <p>You may use Vexora for:</p>
-    <ul>
-        <li>Protecting your own AI-integrated applications from prompt injection attacks.</li>
-        <li>Research, development, and educational purposes related to LLM security.</li>
-        <li>Internal tooling within your organisation, subject to your organisation policies.</li>
-    </ul>
+        <!-- Hero Section -->
+        <header class="legal-hero">
+            <div class="legal-badge">
+                <span class="legal-badge-dot"></span>
+                <span>Governance &amp; Terms</span>
+            </div>
+            <h1>Terms of Service</h1>
+            <p class="legal-hero-lead">
+                These terms govern your installation, deployment, and use of the Vexora prompt injection defense framework. By accessing or using this software, you agree to comply with the terms set forth below.
+            </p>
+            <div class="legal-meta-bar">
+                <div class="legal-meta-item">
+                    <i class="fa-regular fa-calendar"></i>
+                    <span>Effective: November 2026</span>
+                </div>
+                <span class="legal-meta-sep">•</span>
+                <div class="legal-meta-item">
+                    <i class="fa-solid fa-code-commit"></i>
+                    <span>Release: v2.4</span>
+                </div>
+                <span class="legal-meta-sep">•</span>
+                <div class="legal-meta-item">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    <span>MIT Open-Source License</span>
+                </div>
+                <span class="legal-meta-sep">•</span>
+                <div class="legal-meta-item">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Defensive Security Tool</span>
+                </div>
+            </div>
+        </header>
 
-    <h2>4. Prohibited Use</h2>
-    <p>You may not use Vexora to:</p>
-    <ul>
-        <li>Conduct attacks on AI systems or services you do not own or have authorisation to test.</li>
-        <li>Circumvent the terms of service of any third-party AI provider.</li>
-        <li>Generate, distribute, or facilitate illegal content.</li>
-        <li>Represent Vexora as a complete security solution without independent verification.</li>
-    </ul>
+        <!-- Content Grid -->
+        <div class="legal-content-grid">
 
-    <h2>5. Third-Party Services</h2>
-    <p>Vexora acts as an intermediary. When a prompt is forwarded to a third-party AI provider (Gemini, OpenAI, Anthropic), you are subject to that provider's terms of service. Vexora is not responsible for the conduct of third-party providers.</p>
+            <!-- Section 1 -->
+            <article class="legal-card" id="sec-acceptance">
+                <div class="legal-card-header">
+                    <span class="legal-card-num">01</span>
+                    <h2 class="legal-card-title">Acceptance of Terms</h2>
+                </div>
+                <p>
+                    By downloading, installing, running, configuring, or interacting with the <strong>Vexora</strong> software, application, or APIs, you signify your agreement to these Terms of Service. If you do not agree to these terms, you must discontinue use and delete all copies of the software from your systems.
+                </p>
+            </article>
 
-    <h2>6. No Warranty</h2>
-    <p>Vexora is provided as-is without warranty of any kind. The defense layers reduce but do not eliminate the risk of successful prompt injection. You are responsible for testing and validating the tool in your specific deployment context.</p>
+            <!-- Section 2 -->
+            <article class="legal-card" id="sec-description">
+                <div class="legal-card-header">
+                    <span class="legal-card-num">02</span>
+                    <h2 class="legal-card-title">Description of Software &amp; Gateway</h2>
+                </div>
+                <p>
+                    Vexora is an open-source, multi-layered defensive security gateway engineered to evaluate, sanitize, and encapsulate prompt inputs and retrieved document chunks before they reach downstream Large Language Model (LLM) endpoints.
+                </p>
+                <p>
+                    The gateway provides:
+                </p>
+                <ul>
+                    <li>A multi-layer screening engine (Heuristic Pattern Filtering, ML Semantic Intent Classification, and Cryptographic Encapsulation).</li>
+                    <li>Real-time telemetry and inspection tools for adversarial prompt analysis.</li>
+                    <li>A zero-day reporting and continuous feedback loop for local model retraining.</li>
+                    <li>Unified provider adapters for Google Gemini, OpenAI GPT, Anthropic Claude, and local neural engines.</li>
+                </ul>
+            </article>
 
-    <h2>7. Limitation of Liability</h2>
-    <p>To the maximum extent permitted by applicable law, the authors are not liable for any damages arising from your use or inability to use the software, including any security incidents that occur despite use of Vexora.</p>
+            <!-- Section 3 -->
+            <article class="legal-card" id="sec-permitted">
+                <div class="legal-card-header">
+                    <span class="legal-card-num">03</span>
+                    <h2 class="legal-card-title">Permitted &amp; Defensive Use</h2>
+                </div>
+                <p>
+                    You are granted a non-exclusive license to use Vexora for lawful defensive cybersecurity purposes, including:
+                </p>
+                <ul>
+                    <li><strong>Application Protection:</strong> Integrating Vexora into production, staging, or internal AI applications to mitigate prompt injection and RAG vulnerabilities.</li>
+                    <li><strong>Security Research &amp; Evaluation:</strong> Conducting defensive benchmarking, red-teaming, and safety evaluations on systems you own or have explicit authorization to assess.</li>
+                    <li><strong>Academic &amp; Educational Study:</strong> Using the framework to study prompt injection vectors, jailbreak techniques, and defense mechanisms.</li>
+                </ul>
+            </article>
 
-    <h2>8. Open Source</h2>
-    <p>Vexora is released under an open-source licence. You may inspect, modify, and distribute the source code in accordance with that licence.</p>
+            <!-- Section 4 -->
+            <article class="legal-card" id="sec-prohibited">
+                <div class="legal-card-header">
+                    <span class="legal-card-num">04</span>
+                    <h2 class="legal-card-title">Prohibited Conduct</h2>
+                </div>
+                <p>
+                    You agree that you will not use Vexora, directly or indirectly, to:
+                </p>
+                <ul>
+                    <li>Launch unauthorized attacks, denial of service, or exploit attempts against third-party AI services, applications, or infrastructure without explicit permission.</li>
+                    <li>Circumvent or compromise the terms of service, acceptable use policies, or safety guidelines of connected AI model providers (Google, OpenAI, Anthropic).</li>
+                    <li>Generate, process, or disseminate unlawful, abusive, or malicious content through connected AI models.</li>
+                    <li>Misrepresent Vexora as an infallible defense capable of eliminating all cyber risk without independent testing and human oversight.</li>
+                </ul>
+            </article>
 
-    <h2>9. Changes to These Terms</h2>
-    <p>We may revise these terms at any time. Continued use after the effective date of a revision constitutes your acceptance of the revised terms.</p>
+            <!-- Section 5 -->
+            <article class="legal-card" id="sec-third-party">
+                <div class="legal-card-header">
+                    <span class="legal-card-num">05</span>
+                    <h2 class="legal-card-title">Third-Party Model Integrations</h2>
+                </div>
+                <p>
+                    Vexora functions as an intermediary proxy. When you forward screened prompts to third-party AI providers:
+                </p>
+                <ul>
+                    <li>You are solely responsible for obtaining and maintaining valid API credentials and paying any usage fees charged by those providers.</li>
+                    <li>Your interactions with connected providers are governed strictly by the respective provider's terms of service and acceptable use guidelines.</li>
+                    <li>Vexora is not affiliated with, sponsored by, or endorsed by Google, OpenAI, or Anthropic.</li>
+                </ul>
+            </article>
 
-    <div class="legal-footer">
-        <a href="/" class="footer-link">Return to app</a>
-        &middot;
-        <a href="/privacy" class="footer-link">Privacy Policy</a>
-    </div>
-</div>
+            <!-- Section 6 -->
+            <article class="legal-card" id="sec-no-warranty">
+                <div class="legal-card-header">
+                    <span class="legal-card-num">06</span>
+                    <h2 class="legal-card-title">No Warranty &amp; Defense Disclaimer</h2>
+                </div>
+                <p>
+                    Vexora is provided on an <strong>"AS IS"</strong> and <strong>"AS AVAILABLE"</strong> basis, without warranty of any kind, whether express, implied, statutory, or otherwise.
+                </p>
+                <div class="legal-callout legal-callout-warning">
+                    <i class="fa-solid fa-triangle-exclamation legal-callout-icon"></i>
+                    <div>
+                        <strong>Security Notice:</strong> The field of adversarial prompt injection is rapidly evolving. While Vexora provides robust multi-layered mitigation against known injection paradigms, no security gateway can guarantee 100% elimination of all zero-day or novel multi-turn bypasses. Vexora should always be deployed as part of a defense-in-depth security architecture.
+                    </div>
+                </div>
+            </article>
+
+            <!-- Section 7 -->
+            <article class="legal-card" id="sec-liability">
+                <div class="legal-card-header">
+                    <span class="legal-card-num">07</span>
+                    <h2 class="legal-card-title">Limitation of Liability</h2>
+                </div>
+                <p>
+                    To the maximum extent permitted by applicable law, in no event shall Vexora, its maintainers, or its contributors be liable for any direct, indirect, incidental, special, exemplary, punitive, or consequential damages (including loss of data, security incidents, loss of profits, business interruption, or system downtime) arising out of or in connection with the use or inability to use this software.
+                </p>
+            </article>
+
+            <!-- Section 8 -->
+            <article class="legal-card" id="sec-license">
+                <div class="legal-card-header">
+                    <span class="legal-card-num">08</span>
+                    <h2 class="legal-card-title">Open-Source License &amp; Modifications</h2>
+                </div>
+                <p>
+                    Vexora is published and distributed under the <strong>MIT Open Source License</strong>. You are permitted to inspect, modify, fork, and distribute the software in compliance with the license terms.
+                </p>
+                <p>
+                    These terms may be revised periodically to incorporate new features, security protocols, or legal requirements. Continued use of Vexora following an update signifies your acceptance of the revised terms.
+                </p>
+            </article>
+
+        </div>
+
+        <!-- Footer Navigation -->
+        <footer class="legal-footer-nav">
+            <div class="legal-footer-links">
+                <a href="/" class="footer-link">Return to Gateway</a>
+                <span class="legal-footer-sep">•</span>
+                <a href="/privacy" class="footer-link">Privacy Policy</a>
+                <span class="legal-footer-sep">•</span>
+                <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
+            </div>
+            <div class="legal-footer-copy">
+                &copy; 2026 Vexora. All Rights Reserved. Open-source under MIT License.
+            </div>
+        </footer>
+
+    </main>
+
 </body>
 </html>

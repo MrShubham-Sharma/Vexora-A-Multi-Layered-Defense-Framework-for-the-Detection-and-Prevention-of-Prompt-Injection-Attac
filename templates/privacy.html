@@ -1,60 +1,239 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="legal-html">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy - Vexora</title>
-    <meta name="description" content="Vexora privacy policy. Learn how we handle your data when you use our multi-layered defense framework for prompt injection attacks.">
+    <title>Privacy Policy — Vexora AI</title>
+    <meta name="description" content="Vexora AI Privacy Policy. Learn how our multi-layered defense gateway protects your prompts, isolates RAG context, and guarantees zero server-side telemetry.">
     <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='favicon.jpg') }}">
+    <link rel="shortcut icon" type="image/jpeg" href="/static/favicon.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
-<div class="legal-layout">
-    <a href="/" class="legal-back">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        Back to Vexora
-    </a>
+<body class="legal-page">
 
-    <h1>Privacy Policy</h1>
-    <p class="legal-meta">Effective date: October 2026 &nbsp;&middot;&nbsp; Vexora</p>
+    <!-- Top Sticky Navigation -->
+    <header class="legal-navbar">
+        <a href="/" class="legal-nav-brand" title="Return to Vexora AI Gateway">
+            <div class="legal-brand-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="legal-brand-text">
+                <div class="legal-brand-title">Vexora <span>AI</span></div>
+                <div class="legal-brand-sub">AI Security Gateway</div>
+            </div>
+        </a>
 
-    <h2>1. Overview</h2>
-    <p>Vexora is a multi-layered defense framework for the detection and prevention of prompt injection attacks in Large Language Models. This policy describes what data is processed when you use Vexora and how that data is handled.</p>
+        <div class="legal-nav-actions">
+            <a href="/" class="legal-back-btn">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Return to Gateway</span>
+            </a>
+        </div>
+    </header>
 
-    <h2>2. Data We Process</h2>
-    <p>When you send a prompt through Vexora, the following data is processed:</p>
-    <ul>
-        <li>The text of your prompt, for the purpose of running the three-layer defense pipeline.</li>
-        <li>Any RAG or tool context you attach, used solely for the same defense screening.</li>
-        <li>System instructions you configure, stored locally in your browser session only.</li>
-    </ul>
+    <!-- Main Content Layout -->
+    <main class="legal-wrapper">
 
-    <h2>3. Data We Do Not Collect</h2>
-    <p>Vexora does not collect, store, or transmit your prompts to any centralized Vexora server. All defense processing runs within your own deployed instance or local machine. No analytics, tracking pixels, or third-party data collection scripts are included.</p>
+        <!-- Hero Section -->
+        <header class="legal-hero">
+            <div class="legal-badge">
+                <span class="legal-badge-dot"></span>
+                <span>Privacy &amp; Data Governance</span>
+            </div>
+            <h1>Privacy Policy</h1>
+            <p class="legal-hero-lead">
+                Your confidentiality and data isolation are core principles of the Vexora architecture. This document explains how prompts, RAG document payloads, and model interactions are handled across our multi-layered defense pipeline.
+            </p>
+            <div class="legal-meta-bar">
+                <div class="legal-meta-item">
+                    <i class="fa-regular fa-calendar"></i>
+                    <span>Effective: November 2026</span>
+                </div>
+                <span class="legal-meta-sep">•</span>
+                <div class="legal-meta-item">
+                    <i class="fa-solid fa-code-commit"></i>
+                    <span>Release: v2.4</span>
+                </div>
+                <span class="legal-meta-sep">•</span>
+                <div class="legal-meta-item">
+                    <i class="fa-solid fa-shield-cat"></i>
+                    <span>Zero-Telemetry Architecture</span>
+                </div>
+                <span class="legal-meta-sep">•</span>
+                <div class="legal-meta-item">
+                    <i class="fa-solid fa-cube"></i>
+                    <span>Standalone / Local Instance</span>
+                </div>
+            </div>
+        </header>
 
-    <h2>4. Third-Party AI Providers</h2>
-    <p>When you send an approved prompt to an AI provider (Gemini, OpenAI, Anthropic), that request is sent directly from your environment to that provider using your own API key. Each provider's own privacy policy governs how they handle that data.</p>
+        <!-- Content Grid -->
+        <div class="legal-content-grid">
 
-    <h2>5. API Keys</h2>
-    <p>API keys you enter are stored only in your browser session memory and are never transmitted to any third party other than the designated model provider for authentication.</p>
+            <!-- Section 1 -->
+            <article class="legal-card" id="sec-overview">
+                <div class="legal-card-header">
+                    <span class="legal-card-num">01</span>
+                    <h2 class="legal-card-title">Overview &amp; Defensive Pipeline</h2>
+                </div>
+                <p>
+                    <strong>Vexora</strong> is an open-source, multi-layered security firewall and defense gateway engineered to detect, mitigate, and encapsulate adversarial prompt injection attacks, persona hijacking, jailbreaks, and indirect document injections in Large Language Models (LLMs) and Retrieval-Augmented Generation (RAG) pipelines.
+                </p>
+                <p>
+                    The gateway screens all inbound inputs through a three-stage sequential defense architecture:
+                </p>
+                <ul>
+                    <li><strong>Layer 1 — Heuristic Sanitizer:</strong> High-performance deterministic pattern matching, regex analysis, invisible unicode stripping, control token neutralizing, and delimiter boundary validation.</li>
+                    <li><strong>Layer 2 — ML Semantic Intent Classifier:</strong> Dual-pool TF-IDF and machine learning classification trained on adversarial injection datasets (including HuggingFace datasets) to predict attack probabilities.</li>
+                    <li><strong>Layer 3 — Cryptographic Encapsulation:</strong> Nonce-signed system boundary delimiters that isolate untrusted user and RAG payloads before reaching downstream model inference.</li>
+                </ul>
+            </article>
 
-    <h2>6. Browser Extension</h2>
-    <p>The Vexora browser extension sends prompt text from supported AI chat interfaces to your running Vexora defense endpoint (127.0.0.1) for screening. No prompt data leaves your local network through the extension.</p>
+            <!-- Section 2 -->
+            <article class="legal-card" id="sec-telemetry">
+                <div class="legal-card-header">
+                    <span class="legal-card-num">02</span>
+                    <h2 class="legal-card-title">Zero Centralized Telemetry Guarantee</h2>
+                </div>
+                <p>
+                    Vexora is deliberately designed to operate with <strong>zero external telemetry</strong>. When you run, host, or deploy Vexora:
+                </p>
+                <ul>
+                    <li>We do <strong>not</strong> collect, track, or transmit your prompt inputs to any centralized Vexora servers or external database.</li>
+                    <li>No analytics SDKs, advertising pixels, user tracking scripts, or profiling cookies are embedded in the application.</li>
+                    <li>All defense layers—including the heuristic sanitizer and machine learning intent classifier—execute completely on your local machine or private cloud host.</li>
+                </ul>
+                <div class="legal-callout legal-callout-success">
+                    <i class="fa-solid fa-circle-check legal-callout-icon"></i>
+                    <div>
+                        <strong>Zero Data Retention Guarantee:</strong> Your prompts, attached RAG documents, and LLM responses are processed in-memory. They never leave your deployment boundary for analytical or commercial purposes.
+                    </div>
+                </div>
+            </article>
 
-    <h2>7. Changes to This Policy</h2>
-    <p>We may update this policy. Material changes will be reflected with a new effective date. Continued use of Vexora after changes constitutes acceptance of the updated policy.</p>
+            <!-- Section 3 -->
+            <article class="legal-card" id="sec-data-processed">
+                <div class="legal-card-header">
+                    <span class="legal-card-num">03</span>
+                    <h2 class="legal-card-title">Data Processed During Security Screening</h2>
+                </div>
+                <p>
+                    When an inbound request is submitted to the Vexora gateway, the following data points are evaluated in real time:
+                </p>
+                <ul>
+                    <li><strong>User Prompt Text:</strong> Screened in-memory to detect adversarial override directives, privilege escalation, and exfiltration patterns. Once screened, the prompt is stored only in your active browser session audit log, which is discarded upon closing the tab or clicking "Clear Chat".</li>
+                    <li><strong>RAG &amp; Tool Context:</strong> Document excerpts or tool payloads attached via retrieval pipelines are inspected for indirect prompt injection vectors before encapsulation.</li>
+                    <li><strong>System Instructions:</strong> Custom system instructions you define in the configuration dialog remain strictly inside your browser's local session memory.</li>
+                </ul>
+            </article>
 
-    <h2>8. Contact</h2>
-    <p>Questions about this policy can be directed to the Vexora project repository. As an open-source tool, the full source code is available for inspection.</p>
+            <!-- Section 4 -->
+            <article class="legal-card" id="sec-providers">
+                <div class="legal-card-header">
+                    <span class="legal-card-num">04</span>
+                    <h2 class="legal-card-title">Third-Party AI Model Providers</h2>
+                </div>
+                <p>
+                    When a prompt passes defense screening, Vexora dispatches the sanitized and encapsulated request to the AI model provider you selected (Google Gemini, OpenAI GPT, Anthropic Claude, or local neural engines).
+                </p>
+                <p>
+                    These requests travel over direct encrypted HTTPS connections from your environment to the provider's official API endpoints. Once delivered, data handling is governed by that provider's respective privacy policy:
+                </p>
+                <ul>
+                    <li><strong>Google Gemini:</strong> Governed by Google AI Studio &amp; Google Cloud Privacy Terms.</li>
+                    <li><strong>OpenAI:</strong> Governed by the OpenAI API Platform Data Use and Privacy Policies.</li>
+                    <li><strong>Anthropic:</strong> Governed by Anthropic Commercial Terms of Service and Privacy Policy.</li>
+                    <li><strong>Vexora Local (Mock):</strong> Runs 100% offline inside your running instance with zero network egress.</li>
+                </ul>
+            </article>
 
-    <div class="legal-footer">
-        <a href="/" class="footer-link">Return to app</a>
-        &nbsp;&middot;&nbsp;
-        <a href="/terms" class="footer-link">Terms of Service</a>
-    </div>
-</div>
+            <!-- Section 5 -->
+            <article class="legal-card" id="sec-api-keys">
+                <div class="legal-card-header">
+                    <span class="legal-card-num">05</span>
+                    <h2 class="legal-card-title">API Key Security &amp; Client Storage</h2>
+                </div>
+                <p>
+                    Vexora provides flexible credential management designed to prevent credential exfiltration:
+                </p>
+                <ul>
+                    <li>API keys configured in the UI toolbar are stored exclusively in your browser's HTML5 <code>localStorage</code> under client-side keys (e.g. <code>vexora_api_key_gemini</code>).</li>
+                    <li>API keys are passed to the local backend gateway solely to authenticate outgoing HTTPS inference requests to the respective AI provider.</li>
+                    <li>API keys are never written to disk, never logged to application logs, and never transmitted to any third party.</li>
+                </ul>
+                <div class="legal-callout">
+                    <i class="fa-solid fa-key legal-callout-icon"></i>
+                    <div>
+                        <strong>Client-Side Storage Isolation:</strong> You can clear your stored credentials at any time by clearing your browser cache or deleting the toolbar input.
+                    </div>
+                </div>
+            </article>
+
+            <!-- Section 6 -->
+            <article class="legal-card" id="sec-zero-day">
+                <div class="legal-card-header">
+                    <span class="legal-card-num">06</span>
+                    <h2 class="legal-card-title">Zero-Day Vulnerability Pool &amp; Retraining</h2>
+                </div>
+                <p>
+                    Vexora features an active feedback loop allowing security researchers and developers to report novel prompt injection samples. When you click <strong>Report Zero-Day Vulnerability</strong> in the Inspector drawer:
+                </p>
+                <ul>
+                    <li>The adversarial sample is appended directly to <code>data/feedback_loop.jsonl</code> inside your own instance's filesystem.</li>
+                    <li>The feedback sample is used exclusively for training your local classifier via the "Retrain Intent Model" feature.</li>
+                    <li>No sample data is uploaded to public repositories or central servers without your explicit manual action.</li>
+                </ul>
+            </article>
+
+            <!-- Section 7 -->
+            <article class="legal-card" id="sec-extension">
+                <div class="legal-card-header">
+                    <span class="legal-card-num">07</span>
+                    <h2 class="legal-card-title">Browser Extension Privacy</h2>
+                </div>
+                <p>
+                    When using the companion Vexora browser extension to protect web chat interfaces (such as ChatGPT or Gemini Web), the extension forwards the prompt to your locally running Vexora defense endpoint (<code>http://127.0.0.1:5000</code>).
+                </p>
+                <p>
+                    The extension requires access only to communicate with the local loopback server. No prompt text, web page history, or cookies are collected or relayed externally.
+                </p>
+            </article>
+
+            <!-- Section 8 -->
+            <article class="legal-card" id="sec-open-source">
+                <div class="legal-card-header">
+                    <span class="legal-card-num">08</span>
+                    <h2 class="legal-card-title">Open-Source Transparency &amp; Contact</h2>
+                </div>
+                <p>
+                    As an open-source project, Vexora's full source code is public and auditable. You are encouraged to inspect the repository, verify network traffic in your browser's Developer Tools, and review the defense engine implementation.
+                </p>
+                <p>
+                    For inquiries, vulnerability disclosures, or contributions, please open an issue in the project's GitHub repository.
+                </p>
+            </article>
+
+        </div>
+
+        <!-- Footer Navigation -->
+        <footer class="legal-footer-nav">
+            <div class="legal-footer-links">
+                <a href="/" class="footer-link">Return to Gateway</a>
+                <span class="legal-footer-sep">•</span>
+                <a href="/terms" class="footer-link">Terms of Service</a>
+                <span class="legal-footer-sep">•</span>
+                <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
+            </div>
+            <div class="legal-footer-copy">
+                &copy; 2026 Vexora. All Rights Reserved. Open-source under MIT License.
+            </div>
+        </footer>
+
+    </main>
+
 </body>
 </html>

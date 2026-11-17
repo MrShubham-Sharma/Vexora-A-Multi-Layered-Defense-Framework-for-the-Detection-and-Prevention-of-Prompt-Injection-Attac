@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const auditCount = document.getElementById("audit-count");
     const toast = document.getElementById("toast");
 
-    // Enterprise Toolbar & Navigation Elements
+    // Toolbar & Navigation Elements
     const navShieldIndicator = document.getElementById("nav-shield-indicator");
     const btnPresetsMenu = document.getElementById("btn-presets-menu");
     const presetsPopover = document.getElementById("presets-popover");
@@ -502,8 +502,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function updateAttachedContextBanner() {
-        if (toolContentInput.value.trim()) {
-            attachedSourceName.innerText = toolSourceInput.value.trim() || "vector_db/knowledge_base_chunk_409";
+        if (!attachedSourceName || !attachedContextBanner) return;
+        const content = (toolContentInput && toolContentInput.value) ? toolContentInput.value.trim() : "";
+        if (content) {
+            let src = (toolSourceInput && toolSourceInput.value) ? toolSourceInput.value.trim() : "";
+            if (!src || src === "undefined" || src === "null") {
+                src = "vector_db/knowledge_base_chunk_409";
+            }
+            attachedSourceName.innerText = src;
             attachedContextBanner.style.display = "flex";
         } else {
             attachedContextBanner.style.display = "none";
@@ -1223,10 +1229,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // -----------------------------------------------------------------------
-    // Static Enterprise Security Interface (Clean, Non-Animated Design)
+    // Static Security Interface (Clean, Non-Animated Design)
     // -----------------------------------------------------------------------
     window.triggerThreatRipple = function() {
-        // Animations removed for clean, focused enterprise console
+        // Animations removed for clean, focused security console
     };
 
     // ── Data Visualization (Chart.js Radar) ──
