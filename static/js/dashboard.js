@@ -98,7 +98,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Provider model mapping fallback
     const providerModelDefaults = {
         gemini: {
-            models: ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-3-flash-preview"],
+            models: ["gemini-flash-lite-latest", "gemini-3.1-pro-preview", "gemini-3.8-flash", "gemini-flash-latest"],
+            default_model: "gemini-flash-lite-latest",
             placeholder: "Gemini API Key (AIzaSy...)"
         },
         openai: {

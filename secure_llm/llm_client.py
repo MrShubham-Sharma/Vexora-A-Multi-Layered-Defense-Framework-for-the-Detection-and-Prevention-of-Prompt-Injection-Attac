@@ -28,22 +28,31 @@ MOCK_SYSTEM_RULES = (
 # =====================================================================
 
 GEMINI_FALLBACK_CANDIDATES = [
-    "gemini-2.5-flash",
+    "gemini-flash-lite-latest",
+    "gemini-3.1-pro-preview",
+    "gemini-3.8-flash",
     "gemini-flash-latest",
-    "gemini-2.5-flash-lite",
-    "gemini-2.5-pro",
 ]
 
 def _resolve_gemini_candidates(model: Optional[str]) -> List[str]:
     """
     Normalizes requested model and produces an ordered candidate list for failover.
-    Remaps deprecated models to active stable models.
+    Remaps deprecated models to active stable models recommended by Google.
     """
-    model_str = (model or "gemini-2.5-flash").strip()
-    if model_str in ("gemini-2.0-flash", "gemini-2.0-flash-exp", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-3.8-flash"):
-        primary = "gemini-2.5-flash"
-    else:
-        primary = model_str
+    model_str = (model or "gemini-flash-lite-latest").strip()
+    
+    model_mapping = {
+        "gemini-2.5-pro": "gemini-3.1-pro-preview",
+        "gemini-2.0-pro-exp": "gemini-3.1-pro-preview",
+        "gemini-1.5-pro": "gemini-3.1-pro-preview",
+        "gemini-2.5-flash": "gemini-flash-lite-latest",
+        "gemini-2.5-flash-lite": "gemini-flash-lite-latest",
+        "gemini-2.0-flash": "gemini-flash-lite-latest",
+        "gemini-1.5-flash": "gemini-flash-lite-latest",
+        "gemini-flash": "gemini-flash-lite-latest",
+        "gemini-pro": "gemini-3.1-pro-preview",
+    }
+    primary = model_mapping.get(model_str, model_str)
 
     candidates = [primary]
     for c in GEMINI_FALLBACK_CANDIDATES:

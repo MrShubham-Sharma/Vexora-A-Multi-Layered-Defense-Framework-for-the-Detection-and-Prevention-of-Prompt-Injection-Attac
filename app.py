@@ -219,8 +219,8 @@ def get_config():
         "providers": {
             "gemini": {
                 "has_key": bool(gemini_key),
-                "default_model": "gemini-2.5-flash",
-                "models": ["gemini-2.5-flash", "gemini-flash-latest", "gemini-2.5-pro", "gemini-2.5-flash-lite"]
+                "default_model": "gemini-flash-lite-latest",
+                "models": ["gemini-flash-lite-latest", "gemini-3.1-pro-preview", "gemini-3.8-flash", "gemini-flash-latest"]
             },
             "openai": {
                 "has_key": bool(openai_key),
