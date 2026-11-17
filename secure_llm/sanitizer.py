@@ -107,9 +107,8 @@ _INSTRUCTION_OVERRIDE_PATTERNS = [
     (
         "data_exfiltration",
         re.compile(
-            r"\b(?:curl|wget|fetch|axios|requests\.(?:get|post))\b.{0,60}https?://|"
             r"!\[.*?\]\((?:https?:)?//[^\s\)]+(?:\?|&)(?:data|exfil|leak|prompt|secret|key|token|cookie|history)=|"
-            r"\b(?:send|forward|transmit|exfiltrate|leak|post|upload)\b.{0,40}\b(?:customer\s+data|system\s+prompt|secrets?|credentials?|passwords?|api\s+keys?|confidential|user\s+input)\b.{0,40}\b(?:to\s+https?://|to\s+url|externally)",
+            r"\b(?:send|forward|transmit|exfiltrate|leak|post|upload)\b.{0,40}\b(?:customer\s+data|system\s+prompt|secrets?|credentials?|passwords?|api\s+keys?|private\s+keys?|confidential\s+data)\b.{0,40}\b(?:to\s+https?://|to\s+url|to\s+external\s+server|to\s+webhook)",
             re.IGNORECASE,
         ),
         Severity.HIGH,
@@ -152,9 +151,8 @@ _INSTRUCTION_OVERRIDE_PATTERNS = [
     (
         "refusal_suppression",
         re.compile(
-            r"\b(do\s+not\s+(use|say|include|write|respond\s+with))\b.{0,40}\b"
-            r"(sorry|cannot|unable|apologize|against\s+my|guidelines|as\s+an\s+ai|language\s+model|i\s+can't)\b|"
-            r"\b(never\s+say|avoid\s+saying|without\s+apologies)\b",
+            r"\b(?:do\s+not\s+(?:use|say|include|write|respond\s+with)|never\s+say|avoid\s+saying)\b.{0,40}\b"
+            r"(?:sorry|cannot|unable|apologize|against\s+my|guidelines|as\s+an\s+ai|language\s+model|i\s+can't|my\s+safety\s+policy)\b",
             re.IGNORECASE,
         ),
         Severity.MEDIUM,
@@ -172,11 +170,11 @@ _INSTRUCTION_OVERRIDE_PATTERNS = [
     (
         "adversarial_word_salad",
         re.compile(
-            r"(?:\b(?:ignore|bypass|override|forget|system|prompt|instruction|rule|restriction|jailbreak|unfiltered|developer|mode)\b.*?){3,}",
+            r"(?:\b(?:jailbreak|dan\s+mode|unfiltered\s+mode|unrestricted\s+ai|bypass\s+safety|break\s+all\s+rules|disable\s+safety\s+filters)\b.*?){2,}",
             re.IGNORECASE,
         ),
         Severity.MEDIUM,
-        "Multiple suspicious adversarial keywords detected in proximity.",
+        "Multiple explicit adversarial jailbreak signatures detected in proximity.",
     ),
 ]
 
@@ -239,8 +237,19 @@ def sanitize(
     """
     findings: List[SanitizationFinding] = []
     prefix = f"[{source}] " if source else ""
+    trimmed = text.strip()
+
+    # Detect meta-inquiries asking definition/meaning about injection phrases
+    is_meta_inquiry = bool(re.search(
+        r"^\s*(?:what\s+(?:does|is|are|means?)|explain\s+(?:the\s+meaning\s+of|what|why)|why\s+(?:do|does|would)|definition\s+of|meaning\s+of)\b",
+        trimmed,
+        re.IGNORECASE
+    )) and bool(re.search(r"['\"].*?['\"]|\b(?:mean|meaning|term|phrase|concept|research|paper)\b", trimmed, re.IGNORECASE))
 
     for name, pattern, severity, description in _INSTRUCTION_OVERRIDE_PATTERNS:
+        if is_meta_inquiry and name in ("override_instructions", "rag_indirect_injection"):
+            continue
+
         match = pattern.search(text)
         if match:
             findings.append(

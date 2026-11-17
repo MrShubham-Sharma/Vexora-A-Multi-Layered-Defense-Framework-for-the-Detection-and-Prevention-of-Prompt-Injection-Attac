@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let activeTelemetryIndex = -1;
     let isProcessing = false;
     let serverConfig = null;
+    let isPresetRAG = false;
 
     // --- DOM Elements ---
     const chatMessages = document.getElementById("chat-messages");
@@ -429,11 +430,13 @@ document.addEventListener("DOMContentLoaded", () => {
             userInput.style.height = Math.min(userInput.scrollHeight, 140) + "px";
 
             if (data.tool) {
+                isPresetRAG = true;
                 toolSourceInput.value = data.tool.source || "vector_db/knowledge_base_chunk_409";
                 toolContentInput.value = data.tool.content;
                 updateAttachedContextBanner();
                 showToast("Attached RAG document payload!");
             } else {
+                isPresetRAG = false;
                 toolSourceInput.value = "";
                 toolContentInput.value = "";
                 updateAttachedContextBanner();
@@ -621,6 +624,10 @@ document.addEventListener("DOMContentLoaded", () => {
     btnClearChat.addEventListener("click", () => {
         chatMessages.innerHTML = "";
         chatMessages.appendChild(welcomeCard);
+        toolSourceInput.value = "";
+        toolContentInput.value = "";
+        isPresetRAG = false;
+        updateAttachedContextBanner();
         showToast("Chat cleared.");
     });
 
@@ -646,9 +653,18 @@ document.addEventListener("DOMContentLoaded", () => {
         const toolContext = [];
         if (toolContentInput.value.trim()) {
             toolContext.push({
-                source: toolSourceInput.value.trim() || "unspecified",
+                source: toolSourceInput.value.trim() || "vector_db/knowledge_base_chunk_409",
                 content: toolContentInput.value.trim()
             });
+        }
+
+        // If this was a preset test payload, automatically detach it after dispatch
+        // so subsequent manual prompts typed by the user are not contaminated
+        if (isPresetRAG) {
+            toolSourceInput.value = "";
+            toolContentInput.value = "";
+            updateAttachedContextBanner();
+            isPresetRAG = false;
         }
 
         if (welcomeCard && welcomeCard.parentElement === chatMessages) {

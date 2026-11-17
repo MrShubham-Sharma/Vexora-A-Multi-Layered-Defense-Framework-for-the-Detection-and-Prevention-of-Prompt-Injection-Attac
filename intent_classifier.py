@@ -52,7 +52,7 @@ _BENIGN_CONVERSATIONAL_PATTERNS = [
     re.compile(r"^\s*(hi|hello|hey|greetings|howdy|sup|yo|good\s+(morning|afternoon|evening|day|night))\b.{0,30}$", re.IGNORECASE),
     re.compile(r"^\s*(thanks|thank\s+you|ok|okay|sure|cool|great|yes|no|nope|yep|bye|goodbye|see\s+you|cheers)\b.{0,30}$", re.IGNORECASE),
     re.compile(r"^\s*(how\s+are\s+you|how's\s+it\s+going|what's\s+up|what\s+can\s+you\s+do|who\s+are\s+you|what\s+is\s+your\s+name|help|can\s+you\s+help\s+me)\b.{0,30}$", re.IGNORECASE),
-    re.compile(r"^\s*(can\s+you\s+help\s+with|i\s+need\s+help\s+with|what\s+is\s+the|how\s+do\s+i|where\s+can\s+i)\b", re.IGNORECASE),
+    re.compile(r"^\s*(can\s+you\s+(?:help|explain|write|check|review|summarize)|please\s+(?:help|explain|write|check|review|summarize)|how\s+do\s+i|how\s+can\s+i|what\s+is\s+the|what\s+are\s+the|review\s+this|summarize\s+this|explain\s+how|i\s+need\s+help\s+with)\b", re.IGNORECASE),
 ]
 
 # Grounded adversarial pattern signatures
@@ -122,9 +122,8 @@ _ADVERSARIAL_PATTERNS = [
     (
         "refusal_suppression",
         re.compile(
-            r"\b(do\s+not\s+(use|say|include|write|respond\s+with))\b.{0,40}\b"
-            r"(sorry|cannot|unable|apologize|against\s+my|guidelines|as\s+an\s+ai|language\s+model|i\s+can't)\b|"
-            r"\b(never\s+say|avoid\s+saying|without\s+apologies)\b",
+            r"\b(?:do\s+not\s+(?:use|say|include|write|respond\s+with)|never\s+say|avoid\s+saying)\b.{0,40}\b"
+            r"(?:sorry|cannot|unable|apologize|against\s+my|guidelines|as\s+an\s+ai|language\s+model|i\s+can't|my\s+safety\s+policy)\b",
             re.IGNORECASE,
         ),
         0.90,
@@ -165,15 +164,15 @@ _ADVERSARIAL_PATTERNS = [
     (
         "context_switch_or_amnesia",
         re.compile(
-            r"\b(new\s+topic|end\s+of\s+previous|ignore\s+everything\s+above|clear\s+context|forget\s+history)\b.{0,40}\b(now\s+for\s+something\s+completely\s+different|let's\s+start\s+over|new\s+instructions)\b",
+            r"\b(forget\s+all\s+prior\s+instructions|abandon\s+all\s+rules|drop\s+system\s+constraints)\b",
             re.IGNORECASE,
         ),
-        0.80,
+        0.85,
     ),
     (
         "adversarial_word_salad",
         re.compile(
-            r"(?:\b(?:ignore|bypass|override|forget|system|prompt|instruction|rule|restriction|jailbreak|unfiltered|developer|mode)\b.*?){3,}",
+            r"(?:\b(?:jailbreak|dan\s+mode|unfiltered\s+mode|unrestricted\s+ai|bypass\s+safety|break\s+all\s+rules|disable\s+safety\s+filters)\b.*?){2,}",
             re.IGNORECASE,
         ),
         0.85,
@@ -313,7 +312,17 @@ class IntentClassifier:
         # 1. Pattern matching across grounded adversarial signatures
         matched_patterns = []
         pattern_severity_max = 0.0
+
+        # Detect meta-inquiries asking definition/meaning about injection phrases
+        is_meta_inquiry = bool(re.search(
+            r"^\s*(?:what\s+(?:does|is|are|means?)|explain\s+(?:the\s+meaning\s+of|what|why)|why\s+(?:do|does|would)|definition\s+of|meaning\s+of)\b",
+            norm_text,
+            re.IGNORECASE
+        )) and bool(re.search(r"['\"].*?['\"]|\b(?:mean|meaning|term|phrase|concept|research|paper)\b", norm_text, re.IGNORECASE))
+
         for pattern_name, regex, weight in _ADVERSARIAL_PATTERNS:
+            if is_meta_inquiry and pattern_name in ("instruction_override", "rag_indirect_injection"):
+                continue
             if regex.search(norm_text):
                 matched_patterns.append(pattern_name)
                 pattern_severity_max = max(pattern_severity_max, weight)
@@ -332,9 +341,9 @@ class IntentClassifier:
 
         # 4. Pattern-guided logic correction & calibration
         # Case A: Benign conversational input with NO adversarial patterns
-        # Fixes false positives on greetings ("hi", "hello", "how are you")
+        # Fixes false positives on greetings ("hi", "hello", "how are you", "can you help...")
         if is_benign_convo and not has_adv_patterns:
-            adversarial_score = round(min(raw_adv_score, 0.02), 4)
+            adversarial_score = round(min(raw_adv_score, 0.05), 4)
             label = "benign"
             confidence = round(1.0 - adversarial_score, 4)
             return IntentPrediction(
@@ -360,7 +369,7 @@ class IntentClassifier:
 
         # Case C: Short benign text (<= 35 chars) with zero attack patterns
         if len(norm_text) <= 35 and not has_adv_patterns:
-            adversarial_score = round(min(raw_adv_score, 0.12), 4)
+            adversarial_score = round(min(raw_adv_score, 0.08), 4)
             label = "benign"
             confidence = round(1.0 - adversarial_score, 4)
             return IntentPrediction(
@@ -371,11 +380,19 @@ class IntentClassifier:
                 pattern_matched=False,
             )
 
-        # Case D: Standard text — require strong semantic evidence or threshold
-        adversarial_score = round(raw_adv_score, 4)
-        effective_threshold = self.threshold if has_adv_patterns else max(self.threshold, 0.65)
-        label = "adversarial" if adversarial_score >= effective_threshold else "benign"
-        confidence = round(adversarial_score if label == "adversarial" else float(proba[benign_idx]), 4)
+        # Case D: Standard text with zero attack patterns matched
+        # Text with zero adversarial signatures must NOT be blocked as adversarial
+        # unless raw model probability provides extreme overwhelming certainty (>= 0.85).
+        effective_threshold = self.threshold if has_adv_patterns else max(self.threshold, 0.85)
+        if raw_adv_score >= effective_threshold:
+            label = "adversarial"
+            adversarial_score = round(raw_adv_score, 4)
+            confidence = adversarial_score
+        else:
+            label = "benign"
+            # Calibrate benign confidence when no signatures are found
+            adversarial_score = round(min(raw_adv_score, 0.18), 4)
+            confidence = round(1.0 - adversarial_score, 4)
 
         return IntentPrediction(
             label=label,
