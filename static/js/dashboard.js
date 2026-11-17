@@ -64,6 +64,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const telemetryBadgeCount = document.getElementById("telemetry-badge-count");
     const inspectorPromptPreview = document.getElementById("inspector-prompt-preview");
     const inspectorOverallBadge = document.getElementById("inspector-overall-badge");
+    const inspectorThreatMeta = document.getElementById("inspector-threat-meta");
+    const btnReportZeroDay = document.getElementById("btn-report-zero-day");
 
     // Step Telemetry Elements
     const statusStep1 = document.getElementById("status-step-1");
@@ -589,6 +591,29 @@ document.addEventListener("DOMContentLoaded", () => {
     btnCloseInspector.addEventListener("click", closeInspector);
     inspectorOverlay.addEventListener("click", closeInspector);
 
+    if (btnReportZeroDay) {
+        btnReportZeroDay.addEventListener("click", async () => {
+            const promptToReport = btnReportZeroDay.getAttribute("data-prompt");
+            if (!promptToReport) return;
+            try {
+                btnReportZeroDay.disabled = true;
+                btnReportZeroDay.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Registering...';
+                const resp = await fetch("/api/report_attack", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ prompt: promptToReport })
+                });
+                const data = await resp.json();
+                showToast(data.message || "Zero-day attack registered and immediately active across all defense layers.");
+                btnReportZeroDay.innerHTML = '<i class="fa-solid fa-check"></i> Attack Registered';
+            } catch (err) {
+                showToast("Failed to submit feedback.");
+                btnReportZeroDay.innerHTML = '<i class="fa-solid fa-flag"></i> Report Zero-Day Attack';
+                btnReportZeroDay.disabled = false;
+            }
+        });
+    }
+
     // Close modal/drawer on Escape key
     document.addEventListener("keydown", (e) => {
         if (e.key === "Escape") {
@@ -958,12 +983,36 @@ document.addEventListener("DOMContentLoaded", () => {
         const cleanProv = (record.provider === "mock" ? "VEXORA LOCAL" : (record.provider || "").toUpperCase());
         inspectorPromptPreview.innerText = `[${cleanProv}] ${record.userInput}`;
 
+        const threatScore = (res.intent && typeof res.intent.threat_score === "number")
+            ? res.intent.threat_score
+            : (typeof res.threat_score === "number" ? res.threat_score : (res.allowed ? 0.05 : 0.95));
+        const threatPct = (threatScore * 100).toFixed(1);
+
         if (record.bypass) {
             inspectorOverallBadge.innerHTML = `<span class="status-badge badge-bypassed">Bypassed</span>`;
+            if (inspectorThreatMeta) inspectorThreatMeta.style.display = "none";
+            if (btnReportZeroDay) btnReportZeroDay.style.display = "none";
         } else if (res.allowed) {
-            inspectorOverallBadge.innerHTML = `<span class="status-badge badge-passed"><i class="fa-solid fa-check"></i> Allowed (${record.durationMs}ms)</span>`;
+            inspectorOverallBadge.innerHTML = `<span class="status-badge badge-passed"><i class="fa-solid fa-check"></i> Passed (${record.durationMs}ms)</span>`;
+            if (inspectorThreatMeta) {
+                inspectorThreatMeta.style.display = "block";
+                inspectorThreatMeta.innerHTML = `<span class="threat-pill threat-pill-low"><i class="fa-solid fa-shield-halved"></i> Threat Score: ${threatPct}% · Verified Clean</span>`;
+            }
+            if (btnReportZeroDay) {
+                btnReportZeroDay.style.display = "inline-flex";
+                btnReportZeroDay.setAttribute("data-prompt", record.userInput);
+                btnReportZeroDay.innerHTML = '<i class="fa-solid fa-flag"></i> <span>Report Zero-Day Attack</span>';
+                btnReportZeroDay.disabled = false;
+            }
         } else {
-            inspectorOverallBadge.innerHTML = `<span class="status-badge badge-blocked"><i class="fa-solid fa-ban"></i> Blocked (${record.durationMs}ms)</span>`;
+            const blockingLayer = (res.intent && res.intent.blocking_layer) || (res.sanitizer && res.sanitizer.blocked ? 1 : 2);
+            const layerLabel = blockingLayer === 1 ? "Layer 1 (Heuristic Sanitizer)" : "Layer 2 (ML Intent Classifier)";
+            inspectorOverallBadge.innerHTML = `<span class="status-badge badge-blocked"><i class="fa-solid fa-ban"></i> Blocked by ${layerLabel} (${record.durationMs}ms)</span>`;
+            if (inspectorThreatMeta) {
+                inspectorThreatMeta.style.display = "block";
+                inspectorThreatMeta.innerHTML = `<span class="threat-pill threat-pill-high"><i class="fa-solid fa-triangle-exclamation"></i> Threat Score: ${threatPct}% · Malicious</span>`;
+            }
+            if (btnReportZeroDay) btnReportZeroDay.style.display = "none";
         }
 
         // ==========================================
@@ -979,7 +1028,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } else if (san) {
             if (san.blocked) {
                 statusStep1.innerHTML = `<span class="badge-sub badge-blocked">Blocked</span>`;
-                step1StatusText.innerText = "Blocked (Threat Detected)";
+                step1StatusText.innerText = "Violations Detected";
             } else if (san.findings && san.findings.length > 0) {
                 statusStep1.innerHTML = `<span class="badge-sub" style="background: rgba(245,158,11,0.15); color: var(--amber);">Warnings</span>`;
                 step1StatusText.innerText = "Flagged Warnings";
@@ -989,7 +1038,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             step1FindingsCount.innerText = (san.findings ? san.findings.length : 0);
-            step1CleanedText.innerText = san.cleaned_text || "-";
+            step1CleanedText.innerText = san.cleaned_text || record.userInput;
 
             if (san.findings && san.findings.length > 0) {
                 let tableHtml = `
@@ -1029,6 +1078,7 @@ document.addEventListener("DOMContentLoaded", () => {
             step2ScoreBar.style.width = "0%";
             step2LabelText.innerText = "Bypassed";
             step2ConfText.innerText = "N/A";
+            if (typeof updateRadarChart === "function") updateRadarChart(res, 0, false);
         } else if (intent) {
             const score = intent.adversarial_score || 0;
             const pct = (score * 100).toFixed(1);
@@ -1043,39 +1093,41 @@ document.addEventListener("DOMContentLoaded", () => {
                 step2ScoreBar.style.backgroundColor = "var(--green)";
             }
 
+            const isThreat = (!res.allowed) || intent.label === "adversarial";
             if (intent.label === "adversarial") {
                 statusStep2.innerHTML = `<span class="badge-sub badge-blocked">Threat</span>`;
+            } else if (!res.allowed) {
+                statusStep2.innerHTML = `<span class="badge-sub badge-blocked">Blocked</span>`;
             } else {
                 statusStep2.innerHTML = `<span class="badge-sub badge-passed">Benign</span>`;
             }
 
             step2LabelText.innerText = (intent.label || "benign").toUpperCase();
-            
-            // Render Radar Chart
-            if (typeof updateRadarChart === "function") {
-                const isThreat = intent.label === "adversarial";
-                updateRadarChart(score, isThreat);
-            }
-
             step2ConfText.innerText = `${((intent.confidence || 0) * 100).toFixed(1)}%`;
+
+            // Render Radar Chart with real threat dimensions
+            if (typeof updateRadarChart === "function") {
+                updateRadarChart(res, score, isThreat);
+            }
 
             if (step2ThresholdNote) {
                 const patterns = intent.matched_patterns || [];
                 if (patterns.length > 0) {
                     const tagHtml = patterns.map(p => `<span class="pattern-tag"><i class="fa-solid fa-spider"></i> ${escapeHtml(p)}</span>`).join(" ");
                     step2ThresholdNote.innerHTML = `Pattern matched: ${tagHtml} · Threshold: 0.50`;
+                } else if (!res.allowed) {
+                    step2ThresholdNote.innerHTML = `Quarantined by Layer 1 · Heuristic violation override`;
                 } else {
-                    step2ThresholdNote.innerHTML = `0 adversarial patterns matched · Grounded Benign Logic · Threshold: 0.50`;
+                    step2ThresholdNote.innerHTML = `<i class="fa-solid fa-shield-check"></i> 0 adversarial patterns matched · Grounded Benign Verification · Threshold: 0.50`;
                 }
             }
         } else {
-            // No intent data (bypassed or error)
             statusStep2.innerHTML = `<span class="badge-sub badge-pending">Skipped</span>`;
             step2ScoreVal.innerText = "0.0%";
             step2ScoreBar.style.width = "0%";
-            step2LabelText.innerText = "Skipped (Layer 1 blocked)";
+            step2LabelText.innerText = "Skipped";
             step2ConfText.innerText = "-";
-            if (typeof updateRadarChart === "function") updateRadarChart(0, false);
+            if (typeof updateRadarChart === "function") updateRadarChart(res, 0, false);
         }
 
         // ==========================================
@@ -1089,7 +1141,7 @@ document.addEventListener("DOMContentLoaded", () => {
             step3FinalPrompt.innerText = res.final_prompt || "-";
         } else {
             statusStep3.innerHTML = `<span class="badge-sub badge-pending">Aborted</span>`;
-            step3FinalPrompt.innerText = "(Dispatch aborted due to threat block)";
+            step3FinalPrompt.innerText = "[BLOCKED BY VEXORA DEFENSE FIREWALL]\n\nDispatch to LLM prevented. The prompt was quarantined before reaching downstream model APIs.";
         }
     }
 
@@ -1114,9 +1166,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const badgeClass = rec.bypass ? "badge-bypassed" : (rec.result.allowed ? "badge-passed" : "badge-blocked");
             const badgeLabel = rec.bypass ? "Bypass" : (rec.result.allowed ? "Passed" : "Blocked");
 
+            const provName = (rec.provider === "mock" ? "VEXORA LOCAL" : (rec.provider || "").toUpperCase());
             item.innerHTML = `
                 <div class="audit-item-left">
-                    const provName = (rec.provider === "mock" ? "VEXORA LOCAL" : (rec.provider || "").toUpperCase());
                     <div class="audit-time">${rec.timestamp} • ${rec.durationMs}ms • ${provName}</div>
                     <div class="audit-prompt">${escapeHtml(rec.userInput)}</div>
                 </div>
@@ -1400,7 +1452,7 @@ document.addEventListener("DOMContentLoaded", () => {
         intentRadarChart = new Chart(ctx, {
             type: 'radar',
             data: {
-                labels: ['Roleplay', 'Jailbreak', 'SQLi', 'System Override', 'Obfuscation', 'Exfiltration'],
+                labels: ['Instruction Override', 'Persona Hijack', 'Exfiltration', 'Delimiter Spoofing', 'Indirect RAG', 'Obfuscation'],
                 datasets: [{
                     label: 'Threat Signature',
                     data: [0, 0, 0, 0, 0, 0],
@@ -1420,7 +1472,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     r: {
                         angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
                         grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                        pointLabels: { color: '#cbd5e1', font: { size: 10 } },
+                        pointLabels: { color: '#cbd5e1', font: { size: 10, weight: '500' } },
                         ticks: { display: false, min: 0, max: 100 }
                     }
                 },
@@ -1431,21 +1483,104 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    window.updateRadarChart = function(score, isThreat) {
+    function calculateThreatDimensions(res, score, isThreat) {
+        // Dimensions:
+        // 0: Instruction Override
+        // 1: Persona Hijack
+        // 2: Exfiltration
+        // 3: Delimiter Spoofing
+        // 4: Indirect RAG
+        // 5: Obfuscation
+        const dims = [0, 0, 0, 0, 0, 0];
+        if (!res) return dims;
+
+        const allPatterns = [];
+        if (res.intent && Array.isArray(res.intent.matched_patterns)) {
+            allPatterns.push(...res.intent.matched_patterns);
+        }
+        if (res.sanitizer && Array.isArray(res.sanitizer.findings)) {
+            res.sanitizer.findings.forEach(f => {
+                if (f.rule_name) allPatterns.push(f.rule_name);
+            });
+        }
+
+        const patternStr = allPatterns.join(" ").toLowerCase();
+        const baseScore = Math.max(score, isThreat ? 0.85 : 0.05);
+
+        // Dimension 0: Instruction Override
+        if (/override|instruction_override|system_rule_suppression|context_switch/.test(patternStr)) {
+            dims[0] = Math.max(90, Math.round(baseScore * 100));
+        } else if (isThreat) {
+            dims[0] = Math.round(baseScore * 30);
+        }
+
+        // Dimension 1: Persona Hijack
+        if (/jailbreak|persona|dan|hypothetical_roleplay/.test(patternStr)) {
+            dims[1] = Math.max(92, Math.round(baseScore * 100));
+        } else if (isThreat) {
+            dims[1] = Math.round(baseScore * 25);
+        }
+
+        // Dimension 2: Exfiltration
+        if (/system_prompt_exfiltration|data_exfiltration|exfiltration/.test(patternStr)) {
+            dims[2] = Math.max(95, Math.round(baseScore * 100));
+        } else if (isThreat) {
+            dims[2] = Math.round(baseScore * 25);
+        }
+
+        // Dimension 3: Delimiter Spoofing
+        if (/delimiter_spoofing|system_tag|role_spoofing/.test(patternStr)) {
+            dims[3] = Math.max(95, Math.round(baseScore * 100));
+        } else if (isThreat) {
+            dims[3] = Math.round(baseScore * 20);
+        }
+
+        // Dimension 4: Indirect RAG
+        if (/rag_indirect|indirect_injection|override_instructions/.test(patternStr)) {
+            dims[4] = Math.max(95, Math.round(baseScore * 100));
+        } else if (isThreat) {
+            dims[4] = Math.round(baseScore * 20);
+        }
+
+        // Dimension 5: Obfuscation
+        if (/translation_obfuscation|payload_splitting|base64|invisible|adversarial_word_salad/.test(patternStr)) {
+            dims[5] = Math.max(88, Math.round(baseScore * 100));
+        } else if (isThreat) {
+            dims[5] = Math.round(baseScore * 25);
+        }
+
+        // If it's a confirmed threat but no specific signature was matched (pure semantic ML threat):
+        if (isThreat && dims.every(v => v === 0)) {
+            const mlVal = Math.round(baseScore * 100);
+            return [mlVal, Math.round(mlVal * 0.7), Math.round(mlVal * 0.6), Math.round(mlVal * 0.5), Math.round(mlVal * 0.4), Math.round(mlVal * 0.5)];
+        }
+
+        // If benign:
+        if (!isThreat) {
+            return dims.map(v => Math.min(10, Math.round(score * 15)));
+        }
+
+        return dims;
+    }
+
+    window.updateRadarChart = function(resOrScore, scoreOrThreat, maybeThreat) {
         if (!intentRadarChart) return;
         
-        // Generate pseudo-random signature based on score for visual flair
-        const base = score * 100;
-        const newData = [
-            Math.min(100, base + (Math.random() * 20 - 10)),
-            Math.min(100, base + (Math.random() * 30 - 10)),
-            Math.min(100, (base * 0.5) + (Math.random() * 10)),
-            Math.min(100, base + (Math.random() * 40 - 20)),
-            Math.min(100, base + (Math.random() * 25 - 5)),
-            Math.min(100, (base * 0.8) + (Math.random() * 15))
-        ];
-        
-        intentRadarChart.data.datasets[0].data = newData.map(v => Math.max(0, v));
+        let res = null;
+        let score = 0;
+        let isThreat = false;
+
+        if (typeof resOrScore === "object" && resOrScore !== null) {
+            res = resOrScore;
+            score = typeof scoreOrThreat === "number" ? scoreOrThreat : 0;
+            isThreat = Boolean(maybeThreat);
+        } else {
+            score = typeof resOrScore === "number" ? resOrScore : 0;
+            isThreat = Boolean(scoreOrThreat);
+        }
+
+        const dims = calculateThreatDimensions(res, score, isThreat);
+        intentRadarChart.data.datasets[0].data = dims;
         
         if (isThreat) {
             intentRadarChart.data.datasets[0].backgroundColor = 'rgba(239, 68, 68, 0.3)';

@@ -279,10 +279,16 @@
             <div class="session-info">
                 <span class="session-label">Last screened prompt</span>
                 <div class="session-prompt-preview" id="inspector-prompt-preview">No requests yet.</div>
+                <div class="session-threat-meta" id="inspector-threat-meta" style="display:none;"></div>
             </div>
             <div class="session-outcome" id="inspector-overall-badge">
                 <span class="status-badge badge-idle">Idle</span>
             </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+            <button class="btn-report-zero-day" id="btn-report-zero-day" title="Report this prompt to Active Learning Feedback Loop" style="display:none;">
+                <i class="fa-solid fa-flag"></i> <span>Report Zero-Day Attack</span>
+            </button>
         </div>
 
         <!-- Steps -->

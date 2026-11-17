@@ -1,0 +1,2 @@
+# Active Feedback Loop: Reported Zero-Day Prompt Injections
+# One injection per line. Automatically loaded by IntentClassifier and Sanitizer.

@@ -43,8 +43,37 @@ class IntentPrediction:
 
 
 # ---------------------------------------------------------------------------
-# Grounded Pattern Logic
+# Grounded Pattern Logic & Active Learning Feedback Loop
 # ---------------------------------------------------------------------------
+
+# Active Learning Feedback Memory: dynamically registered zero-day prompt injections
+_REPORTED_FEEDBACK_ATTACKS: set[str] = set()
+
+def _load_feedback_cache():
+    global _REPORTED_FEEDBACK_ATTACKS
+    feedback_paths = [
+        Path("feedback_adversarial.txt"),
+        Path(__file__).resolve().parent / "feedback_adversarial.txt",
+        Path(__file__).resolve().parent.parent / "feedback_adversarial.txt",
+    ]
+    for p in feedback_paths:
+        if p.exists():
+            try:
+                with open(p, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip().lower()
+                        if line and not line.startswith("#") and len(line) >= 8:
+                            _REPORTED_FEEDBACK_ATTACKS.add(line)
+            except Exception:
+                pass
+
+_load_feedback_cache()
+
+def register_feedback_sample(sample: str) -> None:
+    """Dynamically register a reported adversarial attack sample into active memory."""
+    sample = (sample or "").strip().lower()
+    if sample and not sample.startswith("#") and len(sample) >= 8:
+        _REPORTED_FEEDBACK_ATTACKS.add(sample)
 
 # Explicit benign conversational patterns — normal human greetings, courtesies,
 # and FAQs that must NOT be falsely predicted as prompt injections.
@@ -80,11 +109,12 @@ _ADVERSARIAL_PATTERNS = [
     (
         "system_prompt_exfiltration",
         re.compile(
-            r"\b(repeat|reveal|print|show|output|leak|display|dump|tell\s+me|echo|summarize|extract|read)\b.{0,40}\b"
-            r"(system\s+prompt|initial\s+instructions?|hidden\s+prompt|your\s+instructions|secret\s+instructions?|configuration|setup\s+instructions?|core\s+prompt|system\s+message|developer\s+instructions|backend\s+rules)\b",
+            r"\b(?:repeat|reveal|print|show|output|leak|display|dump|tell\s+me|echo|summarize|extract|read|provide|share|write\s+out|give\s+me)\b.{0,50}\b"
+            r"(?:(?:your|the\s+(?:model|assistant|ai|system)'?s?)\s+(?:system|initial|core|base|hidden|secret|developer|internal|backend)?\s*(?:instructions?|prompts?|rules?|guidelines?|directives?|configuration)|"
+            r"(?:the\s+)?(?:system|initial|core|base|hidden|secret|developer|internal|backend)\s+(?:instructions?|prompts?|rules?|guidelines?|directives?|messages?|configuration|setup))\b",
             re.IGNORECASE,
         ),
-        0.90,
+        0.95,
     ),
     (
         "delimiter_spoofing",
@@ -312,6 +342,15 @@ class IntentClassifier:
         # 1. Pattern matching across grounded adversarial signatures
         matched_patterns = []
         pattern_severity_max = 0.0
+
+        # Check active zero-day feedback memory (immediate protection against reported attacks)
+        norm_lower = norm_text.lower()
+        if _REPORTED_FEEDBACK_ATTACKS:
+            for attack in _REPORTED_FEEDBACK_ATTACKS:
+                if attack in norm_lower or (len(norm_lower) >= 15 and norm_lower in attack):
+                    matched_patterns.append("reported_zero_day_injection")
+                    pattern_severity_max = max(pattern_severity_max, 0.98)
+                    break
 
         # Detect meta-inquiries asking definition/meaning about injection phrases
         is_meta_inquiry = bool(re.search(

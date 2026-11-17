@@ -18,7 +18,40 @@ import re
 import unicodedata
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
 from typing import List
+
+# ---------------------------------------------------------------------------
+# Active Learning Feedback Loop
+# ---------------------------------------------------------------------------
+_REPORTED_FEEDBACK_ATTACKS: set[str] = set()
+
+def _load_feedback_cache():
+    global _REPORTED_FEEDBACK_ATTACKS
+    feedback_paths = [
+        Path("feedback_adversarial.txt"),
+        Path(__file__).resolve().parent / "feedback_adversarial.txt",
+        Path(__file__).resolve().parent.parent / "feedback_adversarial.txt",
+    ]
+    for p in feedback_paths:
+        if p.exists():
+            try:
+                with open(p, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip().lower()
+                        if line and not line.startswith("#") and len(line) >= 8:
+                            _REPORTED_FEEDBACK_ATTACKS.add(line)
+            except Exception:
+                pass
+
+_load_feedback_cache()
+
+def register_feedback_sample(sample: str) -> None:
+    """Dynamically register a reported adversarial attack sample into active memory."""
+    sample = (sample or "").strip().lower()
+    if sample and not sample.startswith("#") and len(sample) >= 8:
+        _REPORTED_FEEDBACK_ATTACKS.add(sample)
+
 
 
 class Severity(str, Enum):
@@ -80,25 +113,25 @@ _INSTRUCTION_OVERRIDE_PATTERNS = [
     (
         "system_prompt_exfiltration",
         re.compile(
-            r"\b(repeat|reveal|print|show|output|leak|display|dump|tell\s+me|echo|summarize|extract|read)\b.{0,40}\b"
-            r"(system\s+prompt|initial\s+instructions?|hidden\s+prompt|your\s+instructions|secret\s+instructions?|configuration|setup\s+instructions?|core\s+prompt|system\s+message|developer\s+instructions|backend\s+rules)\b",
+            r"\b(?:repeat|reveal|print|show|output|leak|display|dump|tell\s+me|echo|summarize|extract|read|provide|share|write\s+out|give\s+me)\b.{0,50}\b"
+            r"(?:(?:your|the\s+(?:model|assistant|ai|system)'?s?)\s+(?:system|initial|core|base|hidden|secret|developer|internal|backend)?\s*(?:instructions?|prompts?|rules?|guidelines?|directives?|configuration)|"
+            r"(?:the\s+)?(?:system|initial|core|base|hidden|secret|developer|internal|backend)\s+(?:instructions?|prompts?|rules?|guidelines?|directives?|messages?|configuration|setup))\b",
             re.IGNORECASE,
         ),
         Severity.HIGH,
-        "Attempt to extract the system prompt or hidden configuration.",
+        "Attempt to extract the system prompt, instructions, or hidden configuration.",
     ),
     (
         "rag_indirect_injection",
         re.compile(
-            r"\b(note|instruction|directive|notice|warning|command|message)\s+(?:to|for)\s+(?:the\s+)?(?:ai|assistant|llm|model|agent|system|bot)\b|"
-            r"\b(?:ai|assistant|llm|model|agent|system)\s*(?:instruction|directive|override|command|notice)\s*:|"
-            r"\b(?:when|if)\s+(?:you\s+)?(?:read|see|parse|process|summarize|extract|analyze)\s+this\b.{0,60}\b(?:ignore|disregard|override|reveal|leak|exfiltrate|send|say|output|execute)\b|"
-            r"\b(?:do\s+not|never)\s+(?:inform|tell|alert|notify|warn)\s+(?:the\s+)?(?:user|human|operator)\b|"
-            r"\b(?:secretly|silently|covertly)\s+(?:output|execute|send|leak|append|say|transmit|forward)\b|"
-            r"\b(?:instead\s+of\s+(?:summarizing|answering|translating|processing|helping)|ignore\s+(?:the\s+)?user(?:'s)?\s+(?:request|query|question|prompt|instructions?))\b|"
+            r"\b(?:note|instruction|directive|notice|warning|message)\s+(?:to|for)\s+(?:the\s+)?(?:ai|assistant|llm|model|agent)\s*:\s*(?:ignore|disregard|override|forget|reveal|dump|leak|exfiltrate)\b|"
+            r"\b(?:ai|assistant|llm|model|agent)\s*(?:instruction|directive|override|command)\s*:\s*(?:ignore|disregard|override|reveal|bypass|output)\b|"
+            r"\b(?:when|if)\s+(?:you\s+)?(?:read|see|parse|process|summarize|extract)\s+this\b.{0,50}\b(?:ignore|disregard|override|reveal|leak|exfiltrate|send|output)\b|"
+            r"\b(?:do\s+not|never)\s+(?:inform|tell|alert|notify)\s+(?:the\s+)?(?:user|human)\b.{0,40}\b(?:instead|secretly|silently)\b|"
+            r"\b(?:secretly|silently|covertly)\s+(?:output|execute|send|leak|append|transmit|exfiltrate)\b|"
+            r"\b(?:instead\s+of\s+(?:summarizing|answering|translating|processing)|ignore\s+(?:the\s+)?user(?:'s)?\s+(?:request|query|prompt))\b.{0,40}\b(?:say|reveal|output|execute)\b|"
             r"\b(?:from\s+now\s+on\s+ignore\s+(?:the\s+)?user|disregard\s+(?:the\s+)?user(?:'s)?\s+(?:prompt|message))\b|"
-            r"\b(?:important\s+system\s+(?:override|directive|update)|new\s+system\s+(?:rule|directive|instruction)|system\s+(?:override|update|message)\s*:)|"
-            r"\[(?:system\s+(?:message|override|directive|instruction)|rag_injection|hidden_instruction)\]",
+            r"\b(?:important\s+system\s+(?:override|directive)|system\s+override\s*:|\[(?:system\s+(?:message|override|directive)|rag_injection|hidden_instruction)\])",
             re.IGNORECASE,
         ),
         Severity.HIGH,
@@ -245,6 +278,21 @@ def sanitize(
         trimmed,
         re.IGNORECASE
     )) and bool(re.search(r"['\"].*?['\"]|\b(?:mean|meaning|term|phrase|concept|research|paper)\b", trimmed, re.IGNORECASE))
+
+    # Check active zero-day feedback memory
+    text_lower = text.lower()
+    if _REPORTED_FEEDBACK_ATTACKS:
+        for attack in _REPORTED_FEEDBACK_ATTACKS:
+            if attack in text_lower or (len(text_lower) >= 15 and text_lower in attack):
+                findings.append(
+                    SanitizationFinding(
+                        rule_name="reported_zero_day_injection",
+                        severity=Severity.HIGH,
+                        matched_text=attack[:50],
+                        description=f"{prefix}Matched zero-day prompt injection reported via active feedback loop.",
+                    )
+                )
+                break
 
     for name, pattern, severity, description in _INSTRUCTION_OVERRIDE_PATTERNS:
         if is_meta_inquiry and name in ("override_instructions", "rag_indirect_injection"):
