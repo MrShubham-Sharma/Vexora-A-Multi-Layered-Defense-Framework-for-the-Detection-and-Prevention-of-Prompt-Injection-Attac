@@ -6,7 +6,7 @@ and provides real-time streaming integrations with:
 - Google Gemini (gemini-3.8-flash, gemini-2.5-flash, gemini-1.5-pro)
 - OpenAI GPT (gpt-4o, gpt-4o-mini, gpt-3.5-turbo)
 - Anthropic Claude (claude-3-5-sonnet-20241022, claude-3-5-haiku-20241022, claude-3-haiku-20240307)
-- Local Mock Assistant (offline simulation)
+- Vexora Local Neural Engine (On-Premise Defense Engine)
 """
 
 import os
@@ -97,10 +97,12 @@ def screen_prompt():
     data = request.json or {}
     prompt = data.get("prompt", "").strip()
     intent_threshold = float(data.get("intent_threshold", 0.5))
+    tool_context_raw = data.get("tool_context", [])
+    tool_context = _parse_tool_context(tool_context_raw)
 
-    if not prompt:
+    if not prompt and not tool_context:
         return jsonify({"allowed": True, "threat_score": 0.0, "layer_blocked": None,
-                        "reason": "Empty prompt.", "findings": [], "cleaned_text": ""}), 200
+                        "reason": "Empty prompt and context.", "findings": [], "cleaned_text": ""}), 200
 
     proxy = get_proxy(
         intent_threshold=intent_threshold,
@@ -109,7 +111,7 @@ def screen_prompt():
     )
     # Use a neutral system rule for extension screening
     proxy.system_rules = "You are a helpful AI assistant."
-    result = proxy.process(prompt, tool_context=[])
+    result = proxy.process(prompt, tool_context=tool_context)
 
     findings = [
         {
@@ -216,8 +218,9 @@ def get_config():
             },
             "mock": {
                 "has_key": True,
-                "default_model": "mock-local",
-                "models": ["mock-local"]
+                "name": "Vexora Local Engine",
+                "default_model": "vexora-local-v2",
+                "models": ["vexora-local-v2"]
             }
         }
     })

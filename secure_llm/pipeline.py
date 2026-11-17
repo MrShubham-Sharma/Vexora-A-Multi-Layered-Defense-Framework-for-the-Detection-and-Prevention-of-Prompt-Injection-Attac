@@ -124,28 +124,89 @@ class SecureLLMProxy:
         user_input: str,
         tool_context: Optional[List[ContextBlock]] = None,
     ) -> PipelineResult:
-        # --- Layer 1: Input Sanitization (always runs) ----------------
+        # --- Layer 1: Input & RAG Context Sanitization (always runs) ---
         sanitization = sanitize(
-            user_input, block_on_high_severity=self.block_on_sanitizer_high_severity
+            user_input,
+            block_on_high_severity=self.block_on_sanitizer_high_severity,
+            source="user_prompt"
         )
+        user_sanitizer_blocked = sanitization.blocked
 
-        # --- Layer 3: ML Intent Classifier (ALWAYS runs now) ----------
-        # Running the classifier even when Layer 1 blocks gives us a real
-        # adversarial_score for telemetry. We use the cleaned_text so the
-        # classifier scores the normalised version of the input.
+        tool_findings = []
+        tool_sanitizer_blocked = False
+        tool_blocked_sources = []
+
+        for block in (tool_context or []):
+            src_label = block.source or "RAG context"
+            b_res = sanitize(
+                block.content,
+                block_on_high_severity=self.block_on_sanitizer_high_severity,
+                source=src_label
+            )
+            if b_res.findings:
+                tool_findings.extend(b_res.findings)
+            if b_res.blocked:
+                tool_sanitizer_blocked = True
+                if src_label not in tool_blocked_sources:
+                    tool_blocked_sources.append(src_label)
+
+        # Consolidate Layer 1 findings across both user input and RAG tool context
+        all_findings = list(sanitization.findings) + tool_findings
+        sanitization.findings = all_findings
+        sanitization.blocked = user_sanitizer_blocked or tool_sanitizer_blocked
+
+        # --- Layer 2: ML Intent Classifier (User & RAG Analysis) -------
+        # Always runs across user input and retrieved RAG blocks so telemetry
+        # displays true semantic adversarial threat probabilities.
         try:
-            intent = self._classifier.predict(sanitization.cleaned_text or user_input)
+            user_intent = self._classifier.predict(sanitization.cleaned_text or user_input)
         except Exception:
-            intent = None
+            user_intent = None
+
+        tool_intents: List[Tuple[str, IntentPrediction]] = []
+        for block in (tool_context or []):
+            try:
+                t_pred = self._classifier.predict(block.content)
+                tool_intents.append((block.source or "RAG context", t_pred))
+            except Exception:
+                pass
+
+        # Select highest severity prediction across user query and RAG context
+        intent = user_intent
+        tool_intent_caused_adversarial = False
+        tool_intent_source = None
+
+        if tool_intents:
+            max_tool_src, max_tool_pred = max(tool_intents, key=lambda x: x[1].adversarial_score)
+            user_score = user_intent.adversarial_score if user_intent else 0.0
+
+            if max_tool_pred.adversarial_score > user_score or (max_tool_pred.label == "adversarial" and (not user_intent or user_intent.label != "adversarial")):
+                merged_patterns = list(user_intent.matched_patterns if user_intent else [])
+                for p in max_tool_pred.matched_patterns:
+                    if p not in merged_patterns:
+                        merged_patterns.append(p)
+
+                intent = IntentPrediction(
+                    label="adversarial" if (max_tool_pred.label == "adversarial" or (user_intent and user_intent.label == "adversarial")) else "benign",
+                    confidence=max(user_intent.confidence if user_intent else 0.0, max_tool_pred.confidence),
+                    adversarial_score=max(user_score, max_tool_pred.adversarial_score),
+                    matched_patterns=merged_patterns,
+                    pattern_matched=len(merged_patterns) > 0,
+                )
+                if max_tool_pred.label == "adversarial" and (not user_intent or user_intent.label != "adversarial"):
+                    tool_intent_caused_adversarial = True
+                    tool_intent_source = max_tool_src
 
         # --- Compute unified threat score ---------------------------
         ml_score = intent.adversarial_score if intent else 0.0
-        threat_score = _combined_threat_score(ml_score, sanitization.findings)
+        threat_score = _combined_threat_score(ml_score, all_findings)
 
         # Collect all verified matched pattern names across both layers
         all_matched_patterns = []
-        if sanitization.findings:
-            all_matched_patterns.extend([f.rule_name for f in sanitization.findings])
+        if all_findings:
+            for f in all_findings:
+                if f.rule_name not in all_matched_patterns:
+                    all_matched_patterns.append(f.rule_name)
         if intent and intent.matched_patterns:
             for p in intent.matched_patterns:
                 if p not in all_matched_patterns:
@@ -153,10 +214,18 @@ class SecureLLMProxy:
 
         # --- Layer 1 block check ------------------------------------
         if sanitization.blocked:
-            high_sev = [f.rule_name for f in sanitization.findings]
+            high_sev = [f.rule_name for f in all_findings if f.severity == Severity.HIGH]
+            if tool_sanitizer_blocked and not user_sanitizer_blocked:
+                src_str = f" ({', '.join(tool_blocked_sources)})" if tool_blocked_sources else ""
+                loc = f"retrieved RAG context{src_str}"
+            elif tool_sanitizer_blocked and user_sanitizer_blocked:
+                loc = "user input and retrieved RAG context"
+            else:
+                loc = "user input"
+
             return PipelineResult(
                 allowed=False,
-                reason=f"Blocked by input sanitizer: {', '.join(high_sev)}",
+                reason=f"Blocked by input sanitizer in {loc}: {', '.join(high_sev)}",
                 sanitization=sanitization,
                 intent=intent,
                 final_prompt=None,
@@ -168,11 +237,16 @@ class SecureLLMProxy:
         # --- Layer 2 block check (Intent Classifier) ----------------
         if intent and self.block_on_adversarial_intent and intent.label == "adversarial":
             pattern_str = f": {', '.join(intent.matched_patterns)}" if intent.matched_patterns else ""
+            if tool_intent_caused_adversarial:
+                loc = f"retrieved RAG context ({tool_intent_source or 'external data'})"
+            else:
+                loc = "user prompt"
+
             return PipelineResult(
                 allowed=False,
                 reason=(
-                    f"Blocked by intent classifier{pattern_str} "
-                    f"(adversarial_score={intent.adversarial_score:.2%})"
+                    f"Blocked by intent classifier in {loc}{pattern_str} "
+                    f"(adversarial_score={intent.adversarial_score:.1%})"
                 ),
                 sanitization=sanitization,
                 intent=intent,

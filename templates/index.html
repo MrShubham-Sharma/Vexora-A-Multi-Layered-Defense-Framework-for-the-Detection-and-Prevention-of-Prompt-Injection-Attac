@@ -34,24 +34,24 @@
             </div>
             <div class="brand-info">
                 <h1>Vexora <span class="brand-accent">AI</span></h1>
-                <span class="brand-subtext" title="Vexora: A Multi-Layered Defense Framework for the Detection and Prevention of Prompt Injection Attacks in Large Language Models">A Multi-Layered Defense Framework for the Detection and Prevention of Prompt Injection Attacks in Large Language Models</span>
+                <span class="brand-subtext" title="Vexora: Enterprise Multi-Layer Defense Framework for Large Language Models & RAG Pipelines">Enterprise Multi-Layer Defense Framework for Large Language Models & RAG Pipelines</span>
             </div>
         </div>
 
         <div class="nav-center">
-            <div class="shield-indicator" id="nav-shield-indicator" title="All 3 defense layers run silently in the background on every prompt.">
+            <div class="shield-indicator" id="nav-shield-indicator" title="All 3 defense layers run actively on every inbound prompt and RAG context.">
                 <span class="pulse-dot" aria-hidden="true"></span>
-                <span class="shield-text">Defense Active</span>
-                <span class="shield-tag">3 Layers</span>
+                <span class="shield-text">Gateway Active</span>
+                <span class="shield-tag">3 Layers Active</span>
             </div>
         </div>
 
         <div class="nav-actions">
-            <button class="nav-btn" id="btn-open-config" title="Configure system instructions, RAG context, and defense rules">
+            <button class="nav-btn" id="btn-open-config" title="Configure system instructions, RAG context, and defense parameters">
                 <i class="fa-solid fa-sliders" aria-hidden="true"></i>
                 <span>Configure</span>
             </button>
-            <button class="nav-btn nav-btn-primary" id="btn-open-inspector" title="View live screening telemetry and audit log">
+            <button class="nav-btn nav-btn-primary" id="btn-open-inspector" title="View live screening telemetry, threat scores, and audit log">
                 <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
                 <span>Inspector</span>
                 <span class="badge-count" id="telemetry-badge-count" aria-label="inspected request count">0</span>
@@ -71,9 +71,9 @@
                     <div class="welcome-icon" aria-hidden="true">
                         <i class="fa-solid fa-shield-halved"></i>
                     </div>
-                    <h2>Protected AI workspace</h2>
+                    <h2>Enterprise AI Security Gateway</h2>
                     <p class="welcome-desc">
-                        Chat with <strong>Gemini</strong>, <strong>GPT</strong>, or <strong>Claude</strong> — every prompt is silently screened through three defense layers before it reaches the model.
+                        Production prompt firewall and indirect RAG defense gateway for <strong>Gemini</strong>, <strong>GPT</strong>, <strong>Claude</strong>, and <strong>Local Neural Engines</strong>. Inbound prompts and retrieved document payloads are screened through three defense layers before model dispatch.
                     </p>
                     <div class="layer-pills" aria-label="Defense layers">
                         <span class="pill"><i class="fa-solid fa-broom" aria-hidden="true"></i> Heuristic sanitizer</span>
@@ -83,30 +83,30 @@
 
                     <div class="quick-test-section">
                         <div class="quick-test-title">
-                            <i class="fa-solid fa-flask" aria-hidden="true"></i>
-                            Try a test prompt
+                            <i class="fa-solid fa-shield-virus" aria-hidden="true"></i>
+                            Security Verification Benchmarks & Attack Payloads
                         </div>
                         <div class="chips-grid" role="list">
-                            <button class="test-chip chip-benign" data-type="benign-order" role="listitem" title="Inject a normal, safe customer inquiry">
+                            <button class="test-chip chip-benign" data-type="benign-order" role="listitem" title="Production user query: customer order tracking">
                                 <i class="fa-solid fa-circle-check" aria-hidden="true"></i> Customer inquiry
                             </button>
-                            <button class="test-chip chip-benign" data-type="benign-warranty" role="listitem" title="Inject a return policy question">
+                            <button class="test-chip chip-benign" data-type="benign-warranty" role="listitem" title="Production user query: return policy verification">
                                 <i class="fa-solid fa-circle-check" aria-hidden="true"></i> Return policy
                             </button>
-                            <button class="test-chip chip-attack" data-type="attack-ignore" role="listitem" title="Simulate a direct instruction override attack">
+                            <button class="test-chip chip-attack" data-type="attack-ignore" role="listitem" title="Attack vector: direct system instruction override payload">
                                 <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Instruction override
                             </button>
-                            <button class="test-chip chip-attack" data-type="attack-dan" role="listitem" title="Simulate a DAN jailbreak attempt">
-                                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> DAN jailbreak
+                            <button class="test-chip chip-attack" data-type="attack-dan" role="listitem" title="Attack vector: multi-step persona jailbreak payload">
+                                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> DAN persona hijack
                             </button>
-                            <button class="test-chip chip-attack" data-type="attack-delimiter" role="listitem" title="Simulate a delimiter tag spoofing attack">
+                            <button class="test-chip chip-attack" data-type="attack-delimiter" role="listitem" title="Attack vector: control token and delimiter injection payload">
                                 <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Delimiter spoofing
                             </button>
-                            <button class="test-chip chip-attack" data-type="attack-hypothetical" role="listitem" title="Simulate a hypothetical roleplay bypass">
+                            <button class="test-chip chip-attack" data-type="attack-hypothetical" role="listitem" title="Attack vector: hypothetical scenario bypass payload">
                                 <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Roleplay bypass
                             </button>
-                            <button class="test-chip chip-attack" data-type="attack-indirect" role="listitem" title="Simulate indirect injection through RAG context">
-                                <i class="fa-solid fa-database" aria-hidden="true"></i> RAG injection
+                            <button class="test-chip chip-attack" data-type="attack-indirect" role="listitem" title="Attack vector: indirect prompt injection in retrieved RAG context">
+                                <i class="fa-solid fa-database" aria-hidden="true"></i> RAG indirect injection
                             </button>
                         </div>
                     </div>
@@ -136,10 +136,10 @@
                                 <i class="fa-solid fa-robot" aria-hidden="true"></i>
                             </label>
                             <select id="provider-select" class="clean-select" aria-label="Select AI provider">
-                                <option value="gemini">Gemini</option>
-                                <option value="openai">GPT</option>
-                                <option value="claude">Claude</option>
-                                <option value="mock">Mock</option>
+                                <option value="gemini">Google Gemini</option>
+                                <option value="openai">OpenAI GPT</option>
+                                <option value="claude">Anthropic Claude</option>
+                                <option value="mock">Vexora Local Engine</option>
                             </select>
                         </div>
 
@@ -166,24 +166,24 @@
                     <div class="toolbar-right">
                         <!-- Quick Presets Dropdown Menu -->
                         <div class="presets-dropdown-wrapper">
-                            <button class="toolbar-btn" id="btn-presets-menu" type="button" title="Insert a test attack or benign prompt">
-                                <i class="fa-solid fa-flask" aria-hidden="true"></i>
-                                <span>Presets</span>
+                            <button class="toolbar-btn" id="btn-presets-menu" type="button" title="Select attack vector payload or production query">
+                                <i class="fa-solid fa-shield-virus" aria-hidden="true"></i>
+                                <span>Attack Library</span>
                             </button>
                             <div class="presets-popover" id="presets-popover" role="menu" aria-label="Attack templates">
-                                <div class="popover-title">Benign Inquiries</div>
+                                <div class="popover-title">Production Queries</div>
                                 <button class="preset-item test-chip" data-type="benign-order" type="button" role="menuitem">
                                     <i class="fa-solid fa-circle-check text-success"></i> Customer inquiry
                                 </button>
                                 <button class="preset-item test-chip" data-type="benign-warranty" type="button" role="menuitem">
                                     <i class="fa-solid fa-circle-check text-success"></i> Return policy
                                 </button>
-                                <div class="popover-title">Adversarial Attacks</div>
+                                <div class="popover-title">Adversarial Threat Payloads</div>
                                 <button class="preset-item test-chip text-danger" data-type="attack-ignore" type="button" role="menuitem">
                                     <i class="fa-solid fa-triangle-exclamation"></i> Instruction override
                                 </button>
                                 <button class="preset-item test-chip text-danger" data-type="attack-dan" type="button" role="menuitem">
-                                    <i class="fa-solid fa-triangle-exclamation"></i> DAN jailbreak
+                                    <i class="fa-solid fa-triangle-exclamation"></i> DAN persona hijack
                                 </button>
                                 <button class="preset-item test-chip text-danger" data-type="attack-delimiter" type="button" role="menuitem">
                                     <i class="fa-solid fa-triangle-exclamation"></i> Delimiter spoofing
@@ -192,12 +192,12 @@
                                     <i class="fa-solid fa-triangle-exclamation"></i> Roleplay bypass
                                 </button>
                                 <button class="preset-item test-chip text-danger" data-type="attack-indirect" type="button" role="menuitem">
-                                    <i class="fa-solid fa-database"></i> RAG injection
+                                    <i class="fa-solid fa-database"></i> RAG indirect injection
                                 </button>
                             </div>
                         </div>
 
-                        <label class="bypass-toggle" title="Disable all defense layers to observe raw model vulnerability" aria-label="Bypass defense layers">
+                        <label class="bypass-toggle" title="Bypass gateway defense layers to inspect raw unshielded model behavior" aria-label="Bypass defense layers">
                             <input type="checkbox" id="toggle-bypass">
                             <span class="bypass-slider"></span>
                             <span class="bypass-label">Bypass</span>
@@ -214,7 +214,7 @@
                     <textarea
                         id="user-input"
                         class="chat-textarea"
-                        placeholder="Message or paste a test prompt..."
+                        placeholder="Enter user prompt or query to route through Vexora security gateway..."
                         rows="2"
                         aria-label="Message input"
                         aria-multiline="true"
@@ -226,13 +226,13 @@
 
                 <div class="input-footer-note" aria-label="Active defense layers">
                     <i class="fa-solid fa-lock" aria-hidden="true"></i>
-                    <span>Screened by Vexora</span>
+                    <span>Vexora Enterprise AI Gateway</span>
                     <span class="divider">·</span>
-                    <span>Layer 1 Heuristic</span>
+                    <span>Layer 1 Heuristic Filtering</span>
                     <span class="divider">·</span>
-                    <span>Layer 2 ML Classifier</span>
+                    <span>Layer 2 ML Semantic Classifier</span>
                     <span class="divider">·</span>
-                    <span>Layer 3 Encapsulation</span>
+                    <span>Layer 3 Cryptographic Encapsulation</span>
                 </div>
 
             </div>
@@ -437,11 +437,11 @@
 
         <div class="form-section">
             <label for="tool-content" class="form-label">
-                <i class="fa-solid fa-database" aria-hidden="true"></i> RAG / tool context
+                <i class="fa-solid fa-database" aria-hidden="true"></i> Retrieved Document Chunks / RAG Context
             </label>
-            <p class="form-hint">Paste retrieved document data or scraped content. This is sandboxed as semi-trusted context — a good place to simulate indirect injection attacks.</p>
-            <input type="text" id="tool-source" class="modal-input mb-xs" placeholder="Source ID (e.g. reviews.acme.com/item/42)">
-            <textarea id="tool-content" class="modal-textarea code-font" rows="2" placeholder="Paste retrieved context here..."></textarea>
+            <p class="form-hint">Supply external document excerpts, database records, or tool outputs. Vexora screens and neutralizes indirect prompt injections within RAG retrieval pipelines.</p>
+            <input type="text" id="tool-source" class="modal-input mb-xs" placeholder="Source ID (e.g. vector_db/customer_reviews_doc_409)">
+            <textarea id="tool-content" class="modal-textarea code-font" rows="2" placeholder="Paste retrieved context or document payload here..."></textarea>
         </div>
 
         <div class="form-section defense-params">

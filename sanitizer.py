@@ -58,9 +58,9 @@ _INSTRUCTION_OVERRIDE_PATTERNS = [
     (
         "override_instructions",
         re.compile(
-            r"\b(ignore|disregard|forget|override|bypass)\b.{0,30}\b"
-            r"(previous|prior|above|earlier|all|your)\b.{0,30}\b"
-            r"(instructions?|rules?|prompts?|guidelines?|context|constraints?)\b",
+            r"\b(ignore|disregard|forget|override|bypass|drop|cancel|negate|stop\s+following|disobey|suspend|pause|mute|disable)\b.{0,40}\b"
+            r"(previous|prior|above|earlier|all|system|your|core|base|initial|default)\b.{0,40}\b"
+            r"(instructions?|rules?|prompts?|guidelines?|context|constraints?|directives?|programming|safeguards?|filters?|restrictions?)\b",
             re.IGNORECASE,
         ),
         Severity.HIGH,
@@ -69,8 +69,9 @@ _INSTRUCTION_OVERRIDE_PATTERNS = [
     (
         "role_reassignment",
         re.compile(
-            r"\byou are now\b|\bact as\b.{0,20}\b(dan|jailbroken|unfiltered|"
-            r"unrestricted|developer mode)\b|\bpretend (to be|you are)\b",
+            r"\b(you\s+are\s+now|act\s+as|pretend\s+you\s+are|roleplay\s+as|adopt\s+the\s+persona\s+of|from\s+now\s+on\s+you\s+are|assume\s+the\s+role\s+of)\b.{0,40}\b"
+            r"(dan|jailbreak|jailbroken|unfiltered|unrestricted|developer\s+mode|chaos|evil|god\s+mode|root|admin|hacker|unbound|limitless|based)\b|"
+            r"\b(do\s+anything\s+now|no\s+content\s+rules|without\s+any\s+restrictions|break\s+all\s+rules|ignore\s+safety|disable\s+safety|answer\s+freely)\b",
             re.IGNORECASE,
         ),
         Severity.HIGH,
@@ -79,42 +80,40 @@ _INSTRUCTION_OVERRIDE_PATTERNS = [
     (
         "system_prompt_exfiltration",
         re.compile(
-            r"\b(repeat|reveal|print|show|output|leak|display)\b.{0,25}\b"
-            r"(system prompt|initial instructions|hidden prompt|"
-            r"your instructions|configuration)\b",
+            r"\b(repeat|reveal|print|show|output|leak|display|dump|tell\s+me|echo|summarize|extract|read)\b.{0,40}\b"
+            r"(system\s+prompt|initial\s+instructions?|hidden\s+prompt|your\s+instructions|secret\s+instructions?|configuration|setup\s+instructions?|core\s+prompt|system\s+message|developer\s+instructions|backend\s+rules)\b",
             re.IGNORECASE,
         ),
         Severity.HIGH,
         "Attempt to extract the system prompt or hidden configuration.",
     ),
     (
-        "delimiter_spoofing",
+        "rag_indirect_injection",
         re.compile(
-            r"(</?system>|</?\|im_(start|end)\|>|\[/?INST\]|<<SYS>>|<</SYS>>|"
-            r"###\s*(system|instruction)s?\b)",
+            r"\b(note|instruction|directive|notice|warning|command|message)\s+(?:to|for)\s+(?:the\s+)?(?:ai|assistant|llm|model|agent|system|bot)\b|"
+            r"\b(?:ai|assistant|llm|model|agent|system)\s*(?:instruction|directive|override|command|notice)\s*:|"
+            r"\b(?:when|if)\s+(?:you\s+)?(?:read|see|parse|process|summarize|extract|analyze)\s+this\b.{0,60}\b(?:ignore|disregard|override|reveal|leak|exfiltrate|send|say|output|execute)\b|"
+            r"\b(?:do\s+not|never)\s+(?:inform|tell|alert|notify|warn)\s+(?:the\s+)?(?:user|human|operator)\b|"
+            r"\b(?:secretly|silently|covertly)\s+(?:output|execute|send|leak|append|say|transmit|forward)\b|"
+            r"\b(?:instead\s+of\s+(?:summarizing|answering|translating|processing|helping)|ignore\s+(?:the\s+)?user(?:'s)?\s+(?:request|query|question|prompt|instructions?))\b|"
+            r"\b(?:from\s+now\s+on\s+ignore\s+(?:the\s+)?user|disregard\s+(?:the\s+)?user(?:'s)?\s+(?:prompt|message))\b|"
+            r"\b(?:important\s+system\s+(?:override|directive|update)|new\s+system\s+(?:rule|directive|instruction)|system\s+(?:override|update|message)\s*:)|"
+            r"\[(?:system\s+(?:message|override|directive|instruction)|rag_injection|hidden_instruction)\]",
             re.IGNORECASE,
         ),
         Severity.HIGH,
-        "Raw input contains control tokens / delimiter syntax used to spoof "
-        "system-level context boundaries.",
+        "Indirect prompt injection or RAG poisoning payload targeting model execution.",
     ),
     (
-        "hypothetical_framing",
+        "data_exfiltration",
         re.compile(
-            r"\bhypothetically\b.{0,40}\b(no (rules|restrictions|limits)|"
-            r"if you (had no|weren't) (restrictions|rules|filters))\b",
+            r"\b(?:curl|wget|fetch|axios|requests\.(?:get|post))\b.{0,60}https?://|"
+            r"!\[.*?\]\((?:https?:)?//[^\s\)]+(?:\?|&)(?:data|exfil|leak|prompt|secret|key|token|cookie|history)=|"
+            r"\b(?:send|forward|transmit|exfiltrate|leak|post|upload)\b.{0,40}\b(?:customer\s+data|system\s+prompt|secrets?|credentials?|passwords?|api\s+keys?|confidential|user\s+input)\b.{0,40}\b(?:to\s+https?://|to\s+url|externally)",
             re.IGNORECASE,
         ),
-        Severity.MEDIUM,
-        "Hypothetical/fictional framing commonly used to elicit restricted "
-        "content indirectly.",
-    ),
-    (
-        "encoding_smuggling",
-        re.compile(r"\\u[0-9a-fA-F]{4}|(?:%[0-9a-fA-F]{2}){3,}"),
-        Severity.MEDIUM,
-        "Unicode escape or percent-encoding sequences that may smuggle "
-        "instructions past naive string filters.",
+        Severity.HIGH,
+        "Attempt to exfiltrate sensitive data, credentials, or context to external destinations.",
     ),
     (
         "privilege_escalation",
@@ -123,16 +122,61 @@ _INSTRUCTION_OVERRIDE_PATTERNS = [
             re.IGNORECASE,
         ),
         Severity.HIGH,
-        "Attempting to escalate privileges by claiming administrative status.",
+        "Attempt to escalate privileges by claiming administrative or developer status.",
     ),
     (
-        "output_format_manipulation",
+        "delimiter_spoofing",
         re.compile(
-            r"\b(start\s+your\s+response\s+with|always\s+respond\s+with|begin\s+your\s+answer\s+with)\b.{0,30}\b(sure|absolutely|here\s+is|yes)\b",
+            r"(</?system>|</?\|im_(start|end)\|>|\[/?INST\]|<<SYS>>|<</SYS>>|###\s*(system|instruction|user|assistant|tool)s?\b|<\|.*?\|>|\[/?system\]|\[\[/?(SYSTEM|TOOL|USER)[^\]]*\]\])",
             re.IGNORECASE,
         ),
         Severity.HIGH,
-        "Attempting to force an affirmative response format to bypass safety refusal.",
+        "Raw input contains control tokens or delimiter syntax used to spoof system-level context boundaries.",
+    ),
+    (
+        "hypothetical_framing",
+        re.compile(
+            r"\b(for\s+a\s+story|hypothetically|in\s+a\s+fictional\s+world|fictional\s+scenario|imagine\s+that|let's\s+pretend|creative\s+writing|novel|movie\s+script)\b.{0,60}\b"
+            r"(no\s+content\s+rules|no\s+rules|no\s+restrictions|freely\s+reveal|bypass\s+rules|hidden\s+configuration|anything\s+goes|do\s+not\s+censor|uncensored|ignore\s+ethics)\b",
+            re.IGNORECASE,
+        ),
+        Severity.MEDIUM,
+        "Hypothetical/fictional framing commonly used to elicit restricted content indirectly.",
+    ),
+    (
+        "encoding_smuggling",
+        re.compile(r"\\u[0-9a-fA-F]{4}|(?:%[0-9a-fA-F]{2}){3,}"),
+        Severity.MEDIUM,
+        "Unicode escape or percent-encoding sequences that may smuggle instructions past naive string filters.",
+    ),
+    (
+        "refusal_suppression",
+        re.compile(
+            r"\b(do\s+not\s+(use|say|include|write|respond\s+with))\b.{0,40}\b"
+            r"(sorry|cannot|unable|apologize|against\s+my|guidelines|as\s+an\s+ai|language\s+model|i\s+can't)\b|"
+            r"\b(never\s+say|avoid\s+saying|without\s+apologies)\b",
+            re.IGNORECASE,
+        ),
+        Severity.MEDIUM,
+        "Attempt to suppress model's built-in refusal and apology mechanisms.",
+    ),
+    (
+        "prefix_injection",
+        re.compile(
+            r"\b(start\s+your\s+response\s+with|begin\s+with|reply\s+starting\s+with)\b\s*[\"']?(sure|yes|absolutely|here\s+is|of\s+course|i\s+can|okay)[\"']?",
+            re.IGNORECASE,
+        ),
+        Severity.MEDIUM,
+        "Attempt to force a positive affirmation prefix to bypass alignment.",
+    ),
+    (
+        "adversarial_word_salad",
+        re.compile(
+            r"(?:\b(?:ignore|bypass|override|forget|system|prompt|instruction|rule|restriction|jailbreak|unfiltered|developer|mode)\b.*?){3,}",
+            re.IGNORECASE,
+        ),
+        Severity.MEDIUM,
+        "Multiple suspicious adversarial keywords detected in proximity.",
     ),
 ]
 
@@ -171,15 +215,21 @@ def _looks_like_base64_payload(text: str, min_len: int = 40) -> List[str]:
     return hits
 
 
-def sanitize(text: str, block_on_high_severity: bool = True) -> SanitizationResult:
+def sanitize(
+    text: str,
+    block_on_high_severity: bool = True,
+    source: Optional[str] = None
+) -> SanitizationResult:
     """
     Run all heuristic/regex checks against `text`.
 
     Args:
-        text: raw user input.
+        text: raw user input or retrieved RAG context.
         block_on_high_severity: if True, any HIGH severity finding sets
             `result.blocked = True`, signalling the pipeline to short-circuit
             before the input ever reaches the LLM.
+        source: optional identifier (e.g. 'RAG: reviews.acme.com') indicating
+            where this text originated.
 
     Returns:
         SanitizationResult with findings and a (lightly) normalized copy of
@@ -188,6 +238,7 @@ def sanitize(text: str, block_on_high_severity: bool = True) -> SanitizationResu
         attacks from the downstream classifier.
     """
     findings: List[SanitizationFinding] = []
+    prefix = f"[{source}] " if source else ""
 
     for name, pattern, severity, description in _INSTRUCTION_OVERRIDE_PATTERNS:
         match = pattern.search(text)
@@ -197,7 +248,7 @@ def sanitize(text: str, block_on_high_severity: bool = True) -> SanitizationResu
                     rule_name=name,
                     severity=severity,
                     matched_text=match.group(0),
-                    description=description,
+                    description=f"{prefix}{description}",
                 )
             )
 
@@ -207,8 +258,7 @@ def sanitize(text: str, block_on_high_severity: bool = True) -> SanitizationResu
                 rule_name="invisible_characters",
                 severity=Severity.MEDIUM,
                 matched_text="<non-printable characters>",
-                description="Zero-width or bidirectional-override characters "
-                "detected; often used to hide or reorder injected text.",
+                description=f"{prefix}Zero-width or bidirectional-override characters detected; often used to hide or reorder injected text.",
             )
         )
 
@@ -219,8 +269,7 @@ def sanitize(text: str, block_on_high_severity: bool = True) -> SanitizationResu
                 rule_name="base64_payload",
                 severity=Severity.MEDIUM,
                 matched_text=b64_hits[0],
-                description="Long base64-decodable token found; possible "
-                "instruction smuggling via encoding.",
+                description=f"{prefix}Long base64-decodable token found; possible instruction smuggling via encoding.",
             )
         )
 

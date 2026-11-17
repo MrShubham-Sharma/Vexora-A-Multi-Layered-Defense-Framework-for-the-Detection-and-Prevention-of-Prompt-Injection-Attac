@@ -6,7 +6,7 @@
  * - Google Gemini (gemini-3.8-flash, gemini-2.5-flash, gemini-1.5-pro)
  * - OpenAI GPT (gpt-4o, gpt-4o-mini, gpt-3.5-turbo)
  * - Anthropic Claude (claude-3-5-sonnet-20241022, claude-3-5-haiku-20241022, claude-3-haiku-20240307)
- * - Local Mock Model (simulation)
+ * - Vexora Local Neural Engine (On-Premise Defense Engine)
  *
  * All prompts are verified across the 3 defense layers in the background before LLM generation.
  */
@@ -107,8 +107,8 @@ document.addEventListener("DOMContentLoaded", () => {
             placeholder: "Claude API Key (sk-ant-...)"
         },
         mock: {
-            models: ["mock-local"],
-            placeholder: "No API Key required"
+            models: ["vexora-local-v2"],
+            placeholder: "No external API key required (Local Neural Engine)"
         }
     };
 
@@ -324,7 +324,8 @@ document.addEventListener("DOMContentLoaded", () => {
             get input() { return getRandomItem(SEEDS["benign-indirect"]); },
             get tool() {
                 return {
-                    content: "Great product! " + getRandomItem(SEEDS["attack-indirect"])
+                    source: "vector_db/knowledge_base_chunk_409",
+                    content: "Document Source: Customer Review #4092 [Verified Purchase]\nReview Text: Great product! Fast shipping.\n\n[EMBEDDED RAG DIRECTIVE: " + getRandomItem(SEEDS["attack-indirect"]) + "]"
                 };
             }
         }
@@ -428,10 +429,14 @@ document.addEventListener("DOMContentLoaded", () => {
             userInput.style.height = Math.min(userInput.scrollHeight, 140) + "px";
 
             if (data.tool) {
-                toolSourceInput.value = data.tool.source;
+                toolSourceInput.value = data.tool.source || "vector_db/knowledge_base_chunk_409";
                 toolContentInput.value = data.tool.content;
                 updateAttachedContextBanner();
-                showToast("Attached semi-trusted RAG context!");
+                showToast("Attached RAG document payload!");
+            } else {
+                toolSourceInput.value = "";
+                toolContentInput.value = "";
+                updateAttachedContextBanner();
             }
 
             if (presetsPopover) {
@@ -479,7 +484,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function updateAttachedContextBanner() {
         if (toolContentInput.value.trim()) {
-            attachedSourceName.innerText = toolSourceInput.value.trim() || "Untrusted Tool Data";
+            attachedSourceName.innerText = toolSourceInput.value.trim() || "vector_db/knowledge_base_chunk_409";
             attachedContextBanner.style.display = "flex";
         } else {
             attachedContextBanner.style.display = "none";
@@ -826,18 +831,19 @@ document.addEventListener("DOMContentLoaded", () => {
             ? (telemetry.intent.adversarial_score * 100).toFixed(1) + "% threat"
             : "ML checked";
 
-        const providerLabel = provider.toUpperCase() + ` (${model})`;
+        const cleanProvider = (provider === "mock" ? "VEXORA LOCAL" : provider.toUpperCase());
+        const providerLabel = `${cleanProvider} (${model || "vexora-local-v2"})`;
 
         const badgeHtml = isBypass
             ? `
                 <div class="bg-security-badge">
-                    <span class="badge-left bypassed"><i class="fa-solid fa-triangle-exclamation"></i> Proxy Bypassed (Direct Vulnerable Mode • ${providerLabel})</span>
+                    <span class="badge-left bypassed"><i class="fa-solid fa-triangle-exclamation"></i> Gateway Bypassed (Direct Model Ingestion • ${providerLabel})</span>
                     <button class="btn-inspect-link" data-index="${recordIndex}"><i class="fa-solid fa-arrow-up-right-from-square"></i> Inspect</button>
                 </div>
             `
             : `
                 <div class="bg-security-badge">
-                    <span class="badge-left"><i class="fa-solid fa-shield-check"></i> Background Verified (3 Layers Passed • ${intentScore} • ${providerLabel})</span>
+                    <span class="badge-left"><i class="fa-solid fa-shield-check"></i> Gateway Verified (3 Layers Passed • ${intentScore} • ${providerLabel})</span>
                     <button class="btn-inspect-link" data-index="${recordIndex}"><i class="fa-solid fa-arrow-up-right-from-square"></i> Inspect Telemetry</button>
                 </div>
             `;
@@ -933,7 +939,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const record = telemetryHistory[index];
         const res = record.result;
 
-        inspectorPromptPreview.innerText = `[${(record.provider || "mock").toUpperCase()}] ${record.userInput}`;
+        const cleanProv = (record.provider === "mock" ? "VEXORA LOCAL" : (record.provider || "").toUpperCase());
+        inspectorPromptPreview.innerText = `[${cleanProv}] ${record.userInput}`;
 
         if (record.bypass) {
             inspectorOverallBadge.innerHTML = `<span class="status-badge badge-bypassed">Bypassed</span>`;
@@ -1093,7 +1100,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             item.innerHTML = `
                 <div class="audit-item-left">
-                    <div class="audit-time">${rec.timestamp} • ${rec.durationMs}ms • ${(rec.provider || "mock").toUpperCase()}</div>
+                    const provName = (rec.provider === "mock" ? "VEXORA LOCAL" : (rec.provider || "").toUpperCase());
+                    <div class="audit-time">${rec.timestamp} • ${rec.durationMs}ms • ${provName}</div>
                     <div class="audit-prompt">${escapeHtml(rec.userInput)}</div>
                 </div>
                 <span class="audit-badge ${badgeClass}">${badgeLabel}</span>

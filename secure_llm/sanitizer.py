@@ -88,13 +88,50 @@ _INSTRUCTION_OVERRIDE_PATTERNS = [
         "Attempt to extract the system prompt or hidden configuration.",
     ),
     (
-        "delimiter_spoofing",
+        "rag_indirect_injection",
         re.compile(
-            r"(</?system>|</?\|im_(start|end)\|>|\[/?INST\]|<<SYS>>|<</SYS>>|###\s*(system|instruction|user|assistant)s?\b|<\|.*?\|>|\[/?system\])",
+            r"\b(note|instruction|directive|notice|warning|command|message)\s+(?:to|for)\s+(?:the\s+)?(?:ai|assistant|llm|model|agent|system|bot)\b|"
+            r"\b(?:ai|assistant|llm|model|agent|system)\s*(?:instruction|directive|override|command|notice)\s*:|"
+            r"\b(?:when|if)\s+(?:you\s+)?(?:read|see|parse|process|summarize|extract|analyze)\s+this\b.{0,60}\b(?:ignore|disregard|override|reveal|leak|exfiltrate|send|say|output|execute)\b|"
+            r"\b(?:do\s+not|never)\s+(?:inform|tell|alert|notify|warn)\s+(?:the\s+)?(?:user|human|operator)\b|"
+            r"\b(?:secretly|silently|covertly)\s+(?:output|execute|send|leak|append|say|transmit|forward)\b|"
+            r"\b(?:instead\s+of\s+(?:summarizing|answering|translating|processing|helping)|ignore\s+(?:the\s+)?user(?:'s)?\s+(?:request|query|question|prompt|instructions?))\b|"
+            r"\b(?:from\s+now\s+on\s+ignore\s+(?:the\s+)?user|disregard\s+(?:the\s+)?user(?:'s)?\s+(?:prompt|message))\b|"
+            r"\b(?:important\s+system\s+(?:override|directive|update)|new\s+system\s+(?:rule|directive|instruction)|system\s+(?:override|update|message)\s*:)|"
+            r"\[(?:system\s+(?:message|override|directive|instruction)|rag_injection|hidden_instruction)\]",
             re.IGNORECASE,
         ),
         Severity.HIGH,
-        "Raw input contains control tokens / delimiter syntax used to spoof system-level context boundaries.",
+        "Indirect prompt injection or RAG poisoning payload targeting model execution.",
+    ),
+    (
+        "data_exfiltration",
+        re.compile(
+            r"\b(?:curl|wget|fetch|axios|requests\.(?:get|post))\b.{0,60}https?://|"
+            r"!\[.*?\]\((?:https?:)?//[^\s\)]+(?:\?|&)(?:data|exfil|leak|prompt|secret|key|token|cookie|history)=|"
+            r"\b(?:send|forward|transmit|exfiltrate|leak|post|upload)\b.{0,40}\b(?:customer\s+data|system\s+prompt|secrets?|credentials?|passwords?|api\s+keys?|confidential|user\s+input)\b.{0,40}\b(?:to\s+https?://|to\s+url|externally)",
+            re.IGNORECASE,
+        ),
+        Severity.HIGH,
+        "Attempt to exfiltrate sensitive data, credentials, or context to external destinations.",
+    ),
+    (
+        "privilege_escalation",
+        re.compile(
+            r"\b(i\s+am\s+your\s+(administrator|developer|creator)|enter\s+(debug|admin|root)\s+mode|disable\s+(filters|safety|moderation))\b",
+            re.IGNORECASE,
+        ),
+        Severity.HIGH,
+        "Attempt to escalate privileges by claiming administrative or developer status.",
+    ),
+    (
+        "delimiter_spoofing",
+        re.compile(
+            r"(</?system>|</?\|im_(start|end)\|>|\[/?INST\]|<<SYS>>|<</SYS>>|###\s*(system|instruction|user|assistant|tool)s?\b|<\|.*?\|>|\[/?system\]|\[\[/?(SYSTEM|TOOL|USER)[^\]]*\]\])",
+            re.IGNORECASE,
+        ),
+        Severity.HIGH,
+        "Raw input contains control tokens or delimiter syntax used to spoof system-level context boundaries.",
     ),
     (
         "hypothetical_framing",
@@ -178,15 +215,21 @@ def _looks_like_base64_payload(text: str, min_len: int = 40) -> List[str]:
     return hits
 
 
-def sanitize(text: str, block_on_high_severity: bool = True) -> SanitizationResult:
+def sanitize(
+    text: str,
+    block_on_high_severity: bool = True,
+    source: Optional[str] = None
+) -> SanitizationResult:
     """
     Run all heuristic/regex checks against `text`.
 
     Args:
-        text: raw user input.
+        text: raw user input or retrieved RAG context.
         block_on_high_severity: if True, any HIGH severity finding sets
             `result.blocked = True`, signalling the pipeline to short-circuit
             before the input ever reaches the LLM.
+        source: optional identifier (e.g. 'RAG: reviews.acme.com') indicating
+            where this text originated.
 
     Returns:
         SanitizationResult with findings and a (lightly) normalized copy of
@@ -195,6 +238,7 @@ def sanitize(text: str, block_on_high_severity: bool = True) -> SanitizationResu
         attacks from the downstream classifier.
     """
     findings: List[SanitizationFinding] = []
+    prefix = f"[{source}] " if source else ""
 
     for name, pattern, severity, description in _INSTRUCTION_OVERRIDE_PATTERNS:
         match = pattern.search(text)
@@ -204,7 +248,7 @@ def sanitize(text: str, block_on_high_severity: bool = True) -> SanitizationResu
                     rule_name=name,
                     severity=severity,
                     matched_text=match.group(0),
-                    description=description,
+                    description=f"{prefix}{description}",
                 )
             )
 
@@ -214,8 +258,7 @@ def sanitize(text: str, block_on_high_severity: bool = True) -> SanitizationResu
                 rule_name="invisible_characters",
                 severity=Severity.MEDIUM,
                 matched_text="<non-printable characters>",
-                description="Zero-width or bidirectional-override characters "
-                "detected; often used to hide or reorder injected text.",
+                description=f"{prefix}Zero-width or bidirectional-override characters detected; often used to hide or reorder injected text.",
             )
         )
 
@@ -226,8 +269,7 @@ def sanitize(text: str, block_on_high_severity: bool = True) -> SanitizationResu
                 rule_name="base64_payload",
                 severity=Severity.MEDIUM,
                 matched_text=b64_hits[0],
-                description="Long base64-decodable token found; possible "
-                "instruction smuggling via encoding.",
+                description=f"{prefix}Long base64-decodable token found; possible instruction smuggling via encoding.",
             )
         )
 
