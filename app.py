@@ -199,7 +199,7 @@ def get_config():
     """
     Exposes non-secret provider configuration and detected API keys from .env.
     """
-    gemini_key = os.environ.get("GEMINI_API_KEY", "")
+    gemini_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or ""
     openai_key = os.environ.get("OPENAI_API_KEY", "")
     claude_key = os.environ.get("ANTHROPIC_API_KEY", "")
 
@@ -219,8 +219,8 @@ def get_config():
         "providers": {
             "gemini": {
                 "has_key": bool(gemini_key),
-                "default_model": "gemini-3.8-flash",
-                "models": ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+                "default_model": "gemini-2.5-flash",
+                "models": ["gemini-2.5-flash", "gemini-flash-latest", "gemini-2.5-pro", "gemini-2.5-flash-lite"]
             },
             "openai": {
                 "has_key": bool(openai_key),
@@ -246,7 +246,7 @@ def _resolve_api_key(provider: str, user_provided_key: str) -> str:
         return user_provided_key.strip()
     provider = (provider or "").lower()
     if provider == "gemini":
-        return os.environ.get("GEMINI_API_KEY", "")
+        return os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or ""
     elif provider in ("openai", "gpt"):
         return os.environ.get("OPENAI_API_KEY", "")
     elif provider in ("claude", "anthropic"):

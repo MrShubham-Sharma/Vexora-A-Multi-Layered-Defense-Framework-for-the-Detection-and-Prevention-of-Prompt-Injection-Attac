@@ -28,10 +28,10 @@ MOCK_SYSTEM_RULES = (
 # =====================================================================
 
 GEMINI_FALLBACK_CANDIDATES = [
-    "gemini-3.8-flash",
-    "gemini-3.5-flash-lite",
-    "gemini-flash-lite-latest",
-    "gemini-3-flash-preview",
+    "gemini-2.5-flash",
+    "gemini-flash-latest",
+    "gemini-2.5-flash-lite",
+    "gemini-2.5-pro",
 ]
 
 def _resolve_gemini_candidates(model: Optional[str]) -> List[str]:
@@ -39,9 +39,9 @@ def _resolve_gemini_candidates(model: Optional[str]) -> List[str]:
     Normalizes requested model and produces an ordered candidate list for failover.
     Remaps deprecated models to active stable models.
     """
-    model_str = (model or "gemini-3.8-flash").strip()
-    if model_str in ("gemini-2.0-flash", "gemini-2.0-flash-exp", "gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro"):
-        primary = "gemini-3.8-flash"
+    model_str = (model or "gemini-2.5-flash").strip()
+    if model_str in ("gemini-2.0-flash", "gemini-2.0-flash-exp", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-3.8-flash"):
+        primary = "gemini-2.5-flash"
     else:
         primary = model_str
 

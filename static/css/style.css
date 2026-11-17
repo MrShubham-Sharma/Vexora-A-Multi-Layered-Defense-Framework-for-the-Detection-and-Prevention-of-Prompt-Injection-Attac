@@ -111,24 +111,13 @@ body {
 
 .cyber-bg-image {
     position: absolute;
-    top: -5%;
-    left: -5%;
-    width: 110%;
-    height: 110%;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     background-image: url('../cyber_backdrop.jpg?v=4');
     background-size: cover;
     background-position: center;
-    opacity: 1.0;
-    filter: none;
-    animation: flowBackground 120s linear infinite alternate;
-    transform: translate3d(var(--bg-parallax-x, 0px), var(--bg-parallax-y, 0px), 0) scale(1.03);
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
-    will-change: transform, background-position;
-}
-
-@keyframes flowBackground {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 100% 50%; }
+    opacity: 0.95;
 }
 
 /* Dynamic Interactive Spotlight following pointer */
@@ -1082,18 +1071,6 @@ body {
     font-size: 10.5px;
     color: var(--text-4);
     flex-wrap: wrap;
-    background: linear-gradient(90deg, var(--text-4) 0%, #fff 50%, var(--text-4) 100%);
-    background-size: 200% auto;
-    color: transparent;
-    -webkit-background-clip: text;
-    background-clip: text;
-    animation: shine 3s linear infinite;
-}
-
-@keyframes shine {
-    to {
-        background-position: 200% center;
-    }
 }
 
 .input-footer-note .divider { opacity: 0.35; color: var(--text-4); }
@@ -1315,27 +1292,13 @@ body {
 
 .bg-step-card:hover { border-color: var(--border-1); }
 
-/* Success/blocked state animations */
+/* Success/blocked state borders */
 .bg-step-card.state-passed {
     border-color: var(--green-b);
-    animation: card-flash-green 0.4s var(--ease-out);
 }
 
 .bg-step-card.state-blocked {
     border-color: var(--red-b);
-    animation: card-flash-red 0.4s var(--ease-out);
-}
-
-@keyframes card-flash-green {
-    0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
-    50%  { box-shadow: 0 0 0 4px rgba(34,197,94,0.15); }
-    100% { box-shadow: none; }
-}
-
-@keyframes card-flash-red {
-    0%   { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
-    50%  { box-shadow: 0 0 0 4px rgba(239,68,68,0.15); }
-    100% { box-shadow: none; }
 }
 
 .bg-step-header {
@@ -2053,31 +2016,6 @@ body {
     border-color: rgba(248, 113, 113, 0.6);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-/* ── Threat Ripple Animation ── */
-.threat-ripple-effect {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 20px;
-  height: 20px;
-  background: rgba(239, 68, 68, 0.5);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  animation: ripple-pulse 0.8s ease-out forwards;
-  pointer-events: none;
-  z-index: 100;
-}
-
-@keyframes ripple-pulse {
-  0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-  100% { transform: translate(-50%, -50%) scale(80); opacity: 0; }
-}
-
-body.threat-active .cyber-bg-spotlight {
-  background: radial-gradient(800px circle at var(--mouse-x, 50%) var(--mouse-y, 45%), rgba(239, 68, 68, 0.45) 0%, transparent 80%) !important;
-  transition: background 0.1s ease;
 }
 
 /* ── Threat Pill & Zero-Day Reporting Badges ── */

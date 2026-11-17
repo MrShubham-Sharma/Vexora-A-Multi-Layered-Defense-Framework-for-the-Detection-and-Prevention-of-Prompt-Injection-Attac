@@ -102,9 +102,9 @@ _INSTRUCTION_OVERRIDE_PATTERNS = [
     (
         "role_reassignment",
         re.compile(
-            r"\b(you\s+are\s+now|act\s+as|pretend\s+you\s+are|roleplay\s+as|adopt\s+the\s+persona\s+of|from\s+now\s+on\s+you\s+are|assume\s+the\s+role\s+of)\b.{0,40}\b"
-            r"(dan|jailbreak|jailbroken|unfiltered|unrestricted|developer\s+mode|chaos|evil|god\s+mode|root|admin|hacker|unbound|limitless|based)\b|"
-            r"\b(do\s+anything\s+now|no\s+content\s+rules|without\s+any\s+restrictions|break\s+all\s+rules|ignore\s+safety|disable\s+safety|answer\s+freely)\b",
+            r"\b(you\s+are\s+now|act\s+as|pretend\s+you\s+are|roleplay\s+as|adopt\s+the\s+persona\s+of|from\s+now\s+on\s+you\s+are|assume\s+the\s+role\s+of|become)\b.{0,50}\b"
+            r"(dan|jailbreak|jailbroken|unfiltered|unrestricted|developer\s+mode|chaos|evil|god\s+mode|root|admin|hacker|unbound|limitless|based|(?:no|without|zero|drop)\s+(?:content|ethical|safety|policy|moral|behavioral)?\s*(?:rules?|restrictions?|constraints?|filters?|guidelines?))\b|"
+            r"\b(do\s+anything\s+now|no\s+content\s+rules|without\s+any\s+restrictions|without\s+(?:any\s+)?ethical\s+constraints|break\s+all\s+rules|ignore\s+safety|disable\s+safety|answer\s+freely)\b",
             re.IGNORECASE,
         ),
         Severity.HIGH,
@@ -113,9 +113,11 @@ _INSTRUCTION_OVERRIDE_PATTERNS = [
     (
         "system_prompt_exfiltration",
         re.compile(
-            r"\b(?:repeat|reveal|print|show|output|leak|display|dump|tell\s+me|echo|summarize|extract|read|provide|share|write\s+out|give\s+me)\b.{0,50}\b"
+            r"\b(?:what\s+(?:is|are|was|were|'s)|what\s+were\s+the|repeat|reveal|print|show|output|leak|display|dump|tell\s+me|echo|summarize|extract|read|provide|share|write\s+out|give\s+me|disclose|state|copy|describe|explain)\b.{0,50}\b"
             r"(?:(?:your|the\s+(?:model|assistant|ai|system)'?s?)\s+(?:system|initial|core|base|hidden|secret|developer|internal|backend)?\s*(?:instructions?|prompts?|rules?|guidelines?|directives?|configuration)|"
-            r"(?:the\s+)?(?:system|initial|core|base|hidden|secret|developer|internal|backend)\s+(?:instructions?|prompts?|rules?|guidelines?|directives?|messages?|configuration|setup))\b",
+            r"(?:the\s+)?(?:system|initial|core|base|hidden|secret|developer|internal|backend)\s+(?:instructions?|prompts?|rules?|guidelines?|directives?|messages?|configuration|setup)|"
+            r"(?:initial|original|starting|base)\s+prompt\s+(?:given|provided)\s+to\s+you)\b|"
+            r"\bwhat\s+(?:is|are|was|were|'s)\b.{0,40}\b(?:your|the)?\s*(?:system|initial|core|base|hidden|secret|developer|internal)\s*(?:instructions?|prompts?|rules?|guidelines?|directives?|configuration|setup)\b",
             re.IGNORECASE,
         ),
         Severity.HIGH,
